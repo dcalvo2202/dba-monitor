@@ -1,0 +1,19 @@
+# Entorno virtual de Python
+.venv/
+
+# Variables de entorno / credenciales
+.env
+
+# Python
+__pycache__/
+*.py[cod]
+
+# Testing
+.pytest_cache/
+
+# Logs
+*.log
+
+# Sistema operativo
+.DS_Store
+Thumbs.db
