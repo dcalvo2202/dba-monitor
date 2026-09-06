@@ -24,3 +24,8 @@ uvicorn app.main:app --reload
 
 - GET /
 - GET /api/instance
+
+## Documentación
+
+- [Configuración del entorno local](docs/configuracion-local.md)
+- [Flujo de trabajo con Git y GitHub](docs/flujo-git.md)
