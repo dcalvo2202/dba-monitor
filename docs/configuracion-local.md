@@ -455,41 +455,9 @@ No se deben otorgar privilegios adicionales sin identificar primero qué funcion
 
 ## 13. Flujo básico de Git
 
-Antes de comenzar una funcionalidad:
+El procedimiento utilizado por el equipo para ramas, commits, Pull Requests y merges se encuentra documentado en:
 
-```powershell
-git checkout develop
-git pull origin develop
-```
-
-Crear una rama propia:
-
-```powershell
-git checkout -b feature/nombre-funcionalidad
-```
-
-Ejemplos:
-
-```text
-feature/modulo-estado-instancia
-feature/monitoreo-rendimiento
-feature/gestion-almacenamiento
-```
-
-Realizar commits pequeños y descriptivos.
-
-Ejemplos:
-
-```text
-feat: agregar consulta de estado de la instancia
-fix: corregir manejo de conexión con Oracle
-docs: actualizar configuración local
-refactor: separar procesamiento de métricas
-```
-
-Cuando la funcionalidad esté completa se debe subir la rama y crear un Pull Request hacia `develop`.
-
-No subir archivos `.env`, contraseñas ni credenciales reales.
+`docs/flujo-git.md`
 
 ---
 
