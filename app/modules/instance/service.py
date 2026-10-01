@@ -22,14 +22,21 @@ def get_instance_status():
         status,
         startup_time,
         uptime_seconds,
+        database_name,
+        container_name,
+        service_name,
     ) = row
 
     return {
-        "instance_name": instance_name,
-        "host_name": host_name,
-        "version": version,
-        "status": status,
-        "startup_time": startup_time,
-        "uptime_seconds": uptime_seconds,
-        "uptime": format_uptime(uptime_seconds),
-    }
+    "dbms": "Oracle Database",
+    "instance_name": instance_name,
+    "host_name": host_name,
+    "version": version,
+    "status": status,
+    "startup_time": startup_time,
+    "uptime_seconds": uptime_seconds,
+    "uptime": format_uptime(uptime_seconds),
+    "database_name": database_name,
+    "container_name": container_name,
+    "service_name": service_name,
+}
