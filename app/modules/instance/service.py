@@ -1,4 +1,4 @@
-from app.modules.instance.repository import get_instance_info
+from app.modules.instance.repository import get_instance_info, get_memory_info
 
 
 def format_uptime(total_seconds: int) -> str:
@@ -8,6 +8,8 @@ def format_uptime(total_seconds: int) -> str:
 
     return f"{days}d {hours}h {minutes}m {seconds}s"
 
+def bytes_to_mb(value: int) -> float:
+    return round(value / (1024 * 1024), 2)
 
 def get_instance_status():
     row = get_instance_info()
@@ -39,4 +41,29 @@ def get_instance_status():
     "database_name": database_name,
     "container_name": container_name,
     "service_name": service_name,
-}
+    }
+
+def get_memory_status():
+    row = get_memory_info()
+
+    if row is None:
+        return None
+
+    (
+        sga_allocated_bytes,
+        sga_free_bytes,
+        pga_allocated_bytes,
+        pga_inuse_bytes,
+    ) = row
+
+    sga_used_estimated_bytes = sga_allocated_bytes - sga_free_bytes
+    total_allocated_bytes = sga_allocated_bytes + pga_allocated_bytes
+
+    return {
+        "sga_allocated_mb": bytes_to_mb(sga_allocated_bytes),
+        "sga_free_mb": bytes_to_mb(sga_free_bytes),
+        "sga_used_estimated_mb": bytes_to_mb(sga_used_estimated_bytes),
+        "pga_allocated_mb": bytes_to_mb(pga_allocated_bytes),
+        "pga_inuse_mb": bytes_to_mb(pga_inuse_bytes),
+        "total_allocated_mb": bytes_to_mb(total_allocated_bytes),
+    }
