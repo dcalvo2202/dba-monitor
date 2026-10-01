@@ -67,3 +67,15 @@ def get_memory_status():
         "pga_inuse_mb": bytes_to_mb(pga_inuse_bytes),
         "total_allocated_mb": bytes_to_mb(total_allocated_bytes),
     }
+
+def get_instance_overview():
+    instance_status = get_instance_status()
+    memory_status = get_memory_status()
+
+    if instance_status is None:
+        return None
+
+    return {
+        **instance_status,
+        "memory": memory_status,
+    }
