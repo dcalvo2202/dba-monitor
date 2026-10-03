@@ -61,7 +61,14 @@ def get_memory_status():
     ) = row
 
     sga_used_estimated_bytes = sga_allocated_bytes - sga_free_bytes
-    total_allocated_bytes = sga_allocated_bytes + pga_allocated_bytes
+
+    total_allocated_bytes = ( 
+        sga_allocated_bytes + pga_allocated_bytes 
+    )
+    
+    total_used_estimated_bytes = (
+        sga_used_estimated_bytes + pga_inuse_bytes
+    )
 
     return {
         "sga_allocated_mb": bytes_to_mb(sga_allocated_bytes),
@@ -70,6 +77,7 @@ def get_memory_status():
         "pga_allocated_mb": bytes_to_mb(pga_allocated_bytes),
         "pga_inuse_mb": bytes_to_mb(pga_inuse_bytes),
         "total_allocated_mb": bytes_to_mb(total_allocated_bytes),
+        "total_used_estimated_mb": bytes_to_mb(total_used_estimated_bytes),
     }
 
 def get_pdb_status():
