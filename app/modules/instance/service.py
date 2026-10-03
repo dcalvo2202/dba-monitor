@@ -1,4 +1,8 @@
-from app.modules.instance.repository import get_instance_info, get_memory_info
+from app.modules.instance.repository import (
+    get_instance_info,
+    get_memory_info,
+    get_pdbs,
+)
 
 
 def format_uptime(total_seconds: int) -> str:
@@ -68,9 +72,22 @@ def get_memory_status():
         "total_allocated_mb": bytes_to_mb(total_allocated_bytes),
     }
 
+def get_pdb_status():
+    rows = get_pdbs()
+
+    return [
+        {
+            "name": name,
+            "open_mode": open_mode,
+            "restricted": restricted,
+        }
+        for name, open_mode, restricted in rows
+    ]
+
 def get_instance_overview():
     instance_status = get_instance_status()
     memory_status = get_memory_status()
+    pdbs = get_pdb_status()
 
     if instance_status is None:
         return None
@@ -78,4 +95,5 @@ def get_instance_overview():
     return {
         **instance_status,
         "memory": memory_status,
+        "pdbs": pdbs,
     }
