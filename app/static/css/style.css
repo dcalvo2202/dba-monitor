@@ -246,10 +246,83 @@ body {
     font-size: 12px;
 }
 
-.status-value {
-    color: var(--success);
+/* Operational states */
+
+.status-badge,
+.table-status {
+    display: inline-flex;
+    align-items: center;
+
+    width: fit-content;
+
+    padding: 4px 8px;
+
+    border: 1px solid transparent;
+    border-radius: 4px;
+
+    font-size: 12px;
+    font-weight: 700;
 }
 
+.summary-card .status-badge {
+    display: inline-flex;
+    font-size: 13px;
+}
+
+.state-ok {
+    color: #17683e;
+    background: #e8f5ed;
+    border-color: #cbe8d7;
+}
+
+.state-warning {
+    color: #825b12;
+    background: #fff7df;
+    border-color: #eadba8;
+}
+
+.state-error {
+    color: #a03333;
+    background: #fbecec;
+    border-color: #eccaca;
+}
+
+.state-neutral {
+    color: #596675;
+    background: #eef1f4;
+    border-color: #d9dfe4;
+}
+
+
+/* Connection indicator */
+
+.connection-state.is-ok {
+    color: #17683e;
+    background: #e8f5ed;
+    border-color: #cbe8d7;
+}
+
+.connection-state.is-warning {
+    color: #825b12;
+    background: #fff7df;
+    border-color: #eadba8;
+}
+
+.connection-state.is-error {
+    color: #a03333;
+    background: #fbecec;
+    border-color: #eccaca;
+}
+
+.connection-state.is-loading {
+    color: #596675;
+    background: #eef1f4;
+    border-color: #d9dfe4;
+}
+
+.connection-state .status-dot {
+    background: currentColor;
+}
 
 /* Panels */
 
@@ -454,4 +527,116 @@ tbody tr:last-child td {
     .summary-grid {
         grid-template-columns: 1fr;
     }
+
+    .header-actions {
+        width: 100%;
+        flex-wrap: wrap;
+    }
+
+    .update-info {
+        align-items: flex-start;
+    }
+}
+
+/* Memory utilization */
+
+.memory-visuals {
+    padding: 20px 22px;
+
+    border-bottom: 1px solid var(--border);
+}
+
+.memory-utilization + .memory-utilization {
+    margin-top: 18px;
+}
+
+.utilization-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    margin-bottom: 8px;
+
+    font-size: 12px;
+}
+
+.utilization-header span {
+    color: var(--text-secondary);
+}
+
+.utilization-header strong {
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.progress-track {
+    width: 100%;
+    height: 7px;
+
+    overflow: hidden;
+
+    background: #e7ebee;
+    border-radius: 3px;
+}
+
+.progress-bar {
+    width: 0;
+    height: 100%;
+
+    background: #54758d;
+    border-radius: 3px;
+
+    transition: width 0.35s ease;
+}
+
+/* Header actions */
+
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.update-info {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 2px;
+}
+
+.update-info span {
+    color: var(--text-secondary);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.update-info strong {
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.refresh-button {
+    padding: 8px 12px;
+
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+
+    color: var(--text-primary);
+
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 600;
+
+    cursor: pointer;
+}
+
+.refresh-button:hover:not(:disabled) {
+    background: #f0f2f4;
+}
+
+.refresh-button:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
 }
