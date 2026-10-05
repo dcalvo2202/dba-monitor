@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>DBA Monitor</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', path='css/style.css') }}"
+    >
+</head>
+
+<body>
+    <div class="app-layout">
+
+        <aside class="sidebar">
+            <div class="brand">
+                <span class="brand-mark">DB</span>
+
+                <div>
+                    <strong>DBA Monitor</strong>
+                    <span>Oracle Database</span>
+                </div>
+            </div>
+
+            <nav class="navigation">
+                <a class="nav-item active" href="#">
+                    Estado general
+                </a>
+
+                <a class="nav-item disabled" href="#">
+                    Rendimiento
+                </a>
+
+                <a class="nav-item disabled" href="#">
+                    Almacenamiento
+                </a>
+
+                <a class="nav-item disabled" href="#">
+                    Respaldos
+                </a>
+
+                <a class="nav-item disabled" href="#">
+                    Auditoría
+                </a>
+
+                <a class="nav-item disabled" href="#">
+                    Mantenimiento
+                </a>
+            </nav>
+
+            <div class="sidebar-footer">
+                EIF402 · Administración de Bases de Datos
+            </div>
+        </aside>
+
+        <main class="main-content">
+
+            <header class="page-header">
+                <div>
+                    <p class="eyebrow">Módulo 1</p>
+                    <h1>Estado general de la instancia</h1>
+                    <p class="page-description">
+                        Información operativa de la instancia Oracle monitoreada.
+                    </p>
+                </div>
+
+                <div class="header-actions">
+
+                    <div class="update-info">
+                        <span>Última actualización</span>
+                        <strong id="last-updated">—</strong>
+                    </div>
+
+                    <button
+                        id="refresh-button"
+                        class="refresh-button"
+                        type="button"
+                    >
+                        Actualizar
+                    </button>
+
+                    <div id="connection-state" class="connection-state">
+                        <span class="status-dot"></span>
+                        <span id="connection-text">Conectando...</span>
+                    </div>
+
+                </div>
+            </header>
+
+            <section class="summary-grid">
+
+                <article class="summary-card">
+                    <span class="summary-label">Estado</span>
+                    <strong id="instance-status" class="status-badge">—</strong>
+                    <span class="summary-secondary">Instancia Oracle</span>
+                </article>
+
+                <article class="summary-card">
+                    <span class="summary-label">Instancia</span>
+                    <strong id="instance-name">—</strong>
+                    <span class="summary-secondary">Nombre de instancia</span>
+                </article>
+
+                <article class="summary-card">
+                    <span class="summary-label">PDB monitoreada</span>
+                    <strong id="container-name">—</strong>
+                    <span class="summary-secondary">Contenedor actual</span>
+                </article>
+
+                <article class="summary-card">
+                    <span class="summary-label">Tiempo activa</span>
+                    <strong id="instance-uptime">—</strong>
+                    <span class="summary-secondary">Desde el último inicio</span>
+                </article>
+
+            </section>
+
+            <section class="content-grid">
+
+                <article class="panel">
+                    <div class="panel-header">
+                        <div>
+                            <h2>Información de la instancia</h2>
+                            <p>Identificación y estado del SGBD.</p>
+                        </div>
+                    </div>
+
+                    <dl class="details-list">
+                        <div>
+                            <dt>Servidor</dt>
+                            <dd id="host-name">—</dd>
+                        </div>
+
+                        <div>
+                            <dt>Gestor</dt>
+                            <dd id="dbms-name">—</dd>
+                        </div>
+
+                        <div>
+                            <dt>Base de datos</dt>
+                            <dd id="database-name">—</dd>
+                        </div>
+                        
+                        <div>
+                            <dt>Versión</dt>
+                            <dd id="db-version">—</dd>
+                        </div>
+
+                        <div>
+                            <dt>Servicio</dt>
+                            <dd id="service-name">—</dd>
+                        </div>
+
+                        <div>
+                            <dt>Inicio de instancia</dt>
+                            <dd id="startup-time">—</dd>
+                        </div>
+                    </dl>
+                </article>
+
+                <article class="panel">
+                    <div class="panel-header">
+                        <div>
+                            <h2>Memoria</h2>
+                            <p>Uso actual de SGA y PGA.</p>
+                        </div>
+                    </div>
+
+                    <div class="memory-summary">
+                        <div>
+                            <span>Asignada</span>
+                            <strong id="memory-allocated">— MB</strong>
+                        </div>
+
+                        <div>
+                            <span>Utilizada estimada</span>
+                            <strong id="memory-used">— MB</strong>
+                        </div>
+                    </div>
+                    
+                    <div class="memory-visuals">
+
+                        <div class="memory-utilization">
+                            <div class="utilization-header">
+                                <span>Utilización SGA</span>
+                                <strong id="sga-percent">—%</strong>
+                            </div>
+
+                            <div class="progress-track">
+                                <div
+                                    id="sga-progress"
+                                    class="progress-bar"
+                                    role="progressbar"
+                                    aria-label="Utilización SGA"
+                                    aria-valuemin="0"
+                                    aria-valuemax="100"
+                                    aria-valuenow="0"
+                                ></div>
+                            </div>
+                        </div>
+
+
+                        <div class="memory-utilization">
+                            <div class="utilization-header">
+                                <span>Utilización PGA</span>
+                                <strong id="pga-percent">—%</strong>
+                            </div>
+
+                            <div class="progress-track">
+                                <div
+                                    id="pga-progress"
+                                    class="progress-bar"
+                                    role="progressbar"
+                                    aria-label="Utilización PGA"
+                                    aria-valuemin="0"
+                                    aria-valuemax="100"
+                                    aria-valuenow="0"
+                                ></div>
+                            </div>
+                        </div>
+
+
+                        <div class="memory-utilization">
+                            <div class="utilization-header">
+                                <span>Utilización total estimada</span>
+                                <strong id="total-memory-percent">—%</strong>
+                            </div>
+
+                            <div class="progress-track">
+                                <div
+                                    id="total-memory-progress"
+                                    class="progress-bar"
+                                    role="progressbar"
+                                    aria-label="Utilización total estimada de memoria"
+                                    aria-valuemin="0"
+                                    aria-valuemax="100"
+                                    aria-valuenow="0"
+                                ></div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <div class="memory-breakdown">
+                        <div class="memory-row">
+                            <span>SGA asignada</span>
+                            <strong id="sga-allocated">— MB</strong>
+                        </div>
+
+                        <div class="memory-row">
+                            <span>SGA utilizada estimada</span>
+                            <strong id="sga-used">— MB</strong>
+                        </div>
+
+                        <div class="memory-row">
+                            <span>PGA asignada</span>
+                            <strong id="pga-allocated">— MB</strong>
+                        </div>
+
+                        <div class="memory-row">
+                            <span>PGA en uso</span>
+                            <strong id="pga-inuse">— MB</strong>
+                        </div>
+                    </div>
+                </article>
+
+            </section>
+
+            <section class="panel pdb-panel">
+                <div class="panel-header">
+                    <div>
+                        <h2>Pluggable Databases visibles</h2>
+                        <p>
+                            Contenedores disponibles desde la sesión administrativa configurada.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Nombre</th>
+                                <th>Modo de apertura</th>
+                                <th>Restringida</th>
+                            </tr>
+                        </thead>
+
+                        <tbody id="pdb-table-body">
+                            <tr>
+                                <td colspan="3">Cargando información...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+        </main>
+    </div>
+    <script src="{{ url_for('static', path='js/instance.js') }}"></script>
+</body>
+</html>
