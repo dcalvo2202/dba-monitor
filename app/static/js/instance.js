@@ -152,8 +152,6 @@ function renderPdbs(pdbs) {
 
         if (pdb.open_mode === "READ WRITE") {
             modeBadge.classList.add("state-ok");
-        } else if (pdb.open_mode === "READ ONLY") {
-            modeBadge.classList.add("state-warning");
         } else {
             modeBadge.classList.add("state-neutral");
         }
@@ -191,6 +189,7 @@ function renderInstance(data) {
 
     setText("host-name", data.host_name);
     setText("dbms-name", data.dbms);
+    setText("database-name", data.database_name);
     setText("db-version", data.version);
     setText("service-name", data.service_name);
     setText("startup-time", formatDate(data.startup_time));
