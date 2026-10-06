@@ -28,6 +28,23 @@ app.mount(
     name="static",
 )
 
+
+@app.middleware("http")
+async def revalidate_static_files(request: Request, call_next):
+    """Obliga al navegador a revalidar CSS y JavaScript en cada carga.
+
+    Sin esta cabecera el navegador puede seguir usando una copia vieja de un
+    archivo después de un `git pull`. Con "no-cache" pregunta al servidor si
+    cambió: si no cambió responde 304 (sin volver a descargarlo), y si cambió
+    entrega la versión nueva.
+    """
+    response = await call_next(request)
+
+    if request.url.path.startswith("/static/"):
+        response.headers["Cache-Control"] = "no-cache"
+
+    return response
+
 app.include_router(connections_router)
 app.include_router(instance_router)
 app.include_router(audit_router)
