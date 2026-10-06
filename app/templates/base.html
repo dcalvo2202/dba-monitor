@@ -193,6 +193,17 @@
                 #}
                 <div class="header-actions">
 
+                    {# Selector de instancia monitoreada (perfiles de conexión).
+                       layout.js lo llena con GET /api/connections y, al
+                       cambiarlo, valida el perfil con PUT /api/connections/active
+                       antes de recargar la página. #}
+                    <label class="profile-selector">
+                        <span class="profile-selector-label">Instancia</span>
+                        <select id="connection-profile" class="select-input compact" disabled>
+                            <option>Cargando perfiles...</option>
+                        </select>
+                    </label>
+
                     <div class="update-info">
                         <span>Última actualización</span>
                         <strong id="last-updated">—</strong>
@@ -241,6 +252,9 @@
 
                 </div>
             </header>
+
+            <!-- Error al cambiar de perfil de conexión (lo muestra layout.js) -->
+            <p id="profile-message" class="notice profile-message" role="alert" hidden></p>
 
             <!-- Regiones invisibles para avisos a lectores de pantalla -->
             <div id="status-announcer" class="visually-hidden" role="status" aria-live="polite"></div>

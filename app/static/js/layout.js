@@ -8,6 +8,8 @@
  *     "Actualizar" de la página, que cada módulo ya conecta a su propia carga.
  *   - Anuncios accesibles: avisa a los lectores de pantalla solo cuando el
  *     estado de la conexión cambia de verdad (no en cada actualización).
+ *   - Selector de instancia: cambia el perfil de conexión activo
+ *     (API /api/connections) y recarga la página con la nueva instancia.
  *   - Menú en móvil: deja visible el módulo activo en la barra horizontal.
  *
  * Todo está dentro de una función autoejecutable (IIFE) para no crear
@@ -249,6 +251,115 @@
 
 
     /* -------------------------------------------------------------- */
+    /* Selector de instancia (perfiles de conexión)                    */
+    /* -------------------------------------------------------------- */
+
+    /** Muestra u oculta el aviso de error del selector de perfiles. */
+    function showProfileMessage(text) {
+        const message = document.getElementById("profile-message");
+
+        if (!message) {
+            return;
+        }
+
+        message.textContent = text ?? "";
+        message.hidden = !text;
+    }
+
+    /**
+     * Llena el selector con los perfiles de GET /api/connections. Los
+     * perfiles sin contraseña configurada se muestran deshabilitados, con
+     * el motivo, para que se entienda por qué no se pueden elegir.
+     */
+    async function loadProfiles(select) {
+        const response = await fetch("/api/connections", { cache: "no-store" });
+
+        if (!response.ok) {
+            throw new Error(`Error HTTP ${response.status}`);
+        }
+
+        const data = await response.json();
+
+        const options = data.profiles.map((profile) => {
+            const option = document.createElement("option");
+            option.value = profile.name;
+            option.textContent = profile.has_password
+                ? profile.label
+                : `${profile.label} (falta contraseña en .env)`;
+            option.disabled = !profile.has_password;
+            option.title = `${profile.user} @ ${profile.host}:${profile.port}/${profile.service}`;
+            return option;
+        });
+
+        select.replaceChildren(...options);
+        select.value = data.active;
+        select.dataset.active = data.active;
+
+        // Con un solo perfil no hay nada que elegir, pero se muestra igual
+        // para identificar qué instancia se está monitoreando.
+        select.disabled = data.profiles.length < 2;
+    }
+
+    /**
+     * Pide al servidor activar el perfil elegido. El servidor prueba la
+     * conexión antes de cambiar; si falla, se vuelve al perfil anterior y se
+     * muestra el motivo. Si funciona, se recarga la página para que todos
+     * los datos del módulo correspondan a la nueva instancia.
+     */
+    async function changeProfile(select) {
+        const previous = select.dataset.active;
+        const chosen = select.value;
+
+        if (chosen === previous) {
+            return;
+        }
+
+        select.disabled = true;
+        showProfileMessage("");
+
+        try {
+            const response = await fetch("/api/connections/active", {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ name: chosen })
+            });
+
+            if (!response.ok) {
+                const body = await response.json().catch(() => null);
+                throw new Error(body?.detail || `Error HTTP ${response.status}`);
+            }
+
+            window.location.reload();
+
+        } catch (error) {
+            select.value = previous;
+            select.disabled = false;
+            showProfileMessage(error.message);
+        }
+    }
+
+    async function setupProfileSelector() {
+        const select = document.getElementById("connection-profile");
+
+        if (!select) {
+            return;
+        }
+
+        try {
+            await loadProfiles(select);
+            select.addEventListener("change", () => changeProfile(select));
+
+        } catch (error) {
+            const option = document.createElement("option");
+            option.textContent = "Perfiles no disponibles";
+            select.replaceChildren(option);
+            select.disabled = true;
+            console.error("No se pudieron cargar los perfiles de conexión:", error);
+        }
+    }
+
+
+    /* -------------------------------------------------------------- */
     /* Menú en móvil                                                   */
     /* -------------------------------------------------------------- */
 
@@ -278,6 +389,7 @@
         setupThemeToggle();
         setupAutoRefresh();
         setupConnectionAnnouncer();
+        setupProfileSelector();
         revealActiveNavItem();
 
         // Las fuentes web pueden cambiar el ancho de los textos del menú;
