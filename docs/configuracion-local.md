@@ -531,17 +531,13 @@ GRANT SELECT ON SYS.V_$INSTANCE TO DBA_MONITOR;
 
 y verificar que fue concedido desde `XEPDB1`.
 
-### GET /favicon.ico devuelve 404
+### Las tipografías no cargan sin internet
 
-El navegador solicita automáticamente un favicon.
+La interfaz usa las fuentes Fira Sans y Fira Code desde Google Fonts. Sin conexión a internet la aplicación funciona igual: el navegador usa automáticamente fuentes del sistema (Segoe UI, Consolas).
 
-Actualmente el proyecto todavía no define uno, por lo que:
+### Ícono de la pestaña
 
-```text
-GET /favicon.ico 404 Not Found
-```
-
-es normal y no representa un fallo de la API.
+El ícono de la pestaña está definido en `base.html` como SVG en línea, por lo que ya no aparece el error `GET /favicon.ico 404 Not Found` en el registro del servidor.
 
 ---
 
@@ -562,7 +558,7 @@ Actualmente se encuentra implementado:
 - Fecha de inicio.
 - Tiempo de actividad de la instancia.
 - Endpoint `/api/instance`.
-- Plantilla base del frontend (`base.html`) compartida por todos los módulos.
+- Plantilla base del frontend (`base.html`) compartida por todos los módulos, con tema claro/oscuro, actualización automática opcional, menú adaptable a móvil y navegación accesible por teclado.
 - Módulo 5 - Auditoría (`/auditoria`): usuarios, roles, privilegios directos y heredados por roles, y objetos inválidos con sus errores de compilación.
 
 Los demás requerimientos del Módulo 1 y los módulos posteriores se incorporarán progresivamente.

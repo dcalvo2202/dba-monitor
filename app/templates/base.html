@@ -3,7 +3,7 @@
 
     Define la estructura visual común a todos los módulos: <head>, barra
     lateral de navegación y encabezado de página con las acciones de
-    actualización y el indicador de conexión.
+    actualización, el indicador de conexión y el selector de tema.
 
     Cada módulo crea su propia plantilla con {% extends "base.html" %} y
     rellena únicamente los bloques que necesita:
@@ -18,6 +18,29 @@
     Variable de contexto esperada:
         active_module  Clave del módulo actual; marca su enlace como activo.
 #}
+
+{#
+    Íconos del menú (Lucide, licencia ISC), dibujados como SVG en línea para
+    no depender de archivos externos. aria-hidden="true": son decorativos,
+    el texto del enlace ya describe el destino.
+#}
+{% macro nav_icon(name) %}
+<svg class="nav-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    {% if name == "instance" %}
+        <rect x="2" y="2" width="20" height="8" rx="2"/><rect x="2" y="14" width="20" height="8" rx="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/>
+    {% elif name == "performance" %}
+        <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+    {% elif name == "storage" %}
+        <ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14a9 3 0 0 0 18 0V5"/><path d="M3 12a9 3 0 0 0 18 0"/>
+    {% elif name == "backup" %}
+        <rect x="2" y="3" width="20" height="5" rx="1"/><path d="M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8"/><path d="M10 12h4"/>
+    {% elif name == "audit" %}
+        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/>
+    {% elif name == "maintenance" %}
+        <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+    {% endif %}
+</svg>
+{% endmacro %}
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -26,6 +49,34 @@
 
     <title>{% block page_title %}DBA Monitor{% endblock %}</title>
 
+    {# Ícono de la pestaña (base de datos) como SVG en línea: evita el
+       error 404 de /favicon.ico sin agregar archivos al proyecto. #}
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%232f6fa3' stroke-width='2.4' stroke-linecap='round'%3E%3Cellipse cx='12' cy='5' rx='9' ry='3'/%3E%3Cpath d='M3 5v14a9 3 0 0 0 18 0V5'/%3E%3Cpath d='M3 12a9 3 0 0 0 18 0'/%3E%3C/svg%3E">
+
+    {#
+        Aplica el tema guardado ANTES de dibujar la página, para evitar un
+        destello del tema equivocado. Si el navegador bloquea localStorage
+        se usa el tema del sistema operativo.
+    #}
+    <script>
+        try {
+            const savedTheme = localStorage.getItem("dba-monitor-theme");
+            if (savedTheme === "light" || savedTheme === "dark") {
+                document.documentElement.dataset.theme = savedTheme;
+            }
+        } catch (error) {
+            // Sin acceso a localStorage: se mantiene el tema del sistema.
+        }
+    </script>
+
+    <!-- Tipografías Fira Sans (texto) y Fira Code (datos técnicos) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Fira+Sans:wght@400;500;600;700&display=swap"
+    >
+
     <link
         rel="stylesheet"
         href="{{ url_for('static', path='css/style.css') }}"
@@ -33,9 +84,13 @@
 </head>
 
 <body>
+    <!-- Permite a quien navega con teclado saltar el menú lateral -->
+    <a class="skip-link" href="#main-content">Saltar al contenido</a>
+
     {#
         Catálogo de módulos del menú lateral.
-        - key:     identificador que se compara con active_module.
+        - key:     identificador que se compara con active_module y nombre
+                   del ícono en la macro nav_icon.
         - url:     ruta de la página del módulo.
         - enabled: False mientras el módulo no tenga página propia; se
                    muestra atenuado y sin enlace. Al integrar un módulo
@@ -55,7 +110,7 @@
         <!-- Barra lateral: identidad de la aplicación y navegación entre módulos -->
         <aside class="sidebar">
             <div class="brand">
-                <span class="brand-mark">DB</span>
+                <span class="brand-mark" aria-hidden="true">DB</span>
 
                 <div>
                     <strong>DBA Monitor</strong>
@@ -63,7 +118,7 @@
                 </div>
             </div>
 
-            <nav class="navigation">
+            <nav class="navigation" aria-label="Módulos">
                 {% for module in modules %}
                     {% if module.enabled %}
                         <a
@@ -71,12 +126,14 @@
                             href="{{ module.url }}"
                             {% if module.key == active_module %}aria-current="page"{% endif %}
                         >
-                            {{ module.label }}
+                            {{ nav_icon(module.key) }}
+                            <span>{{ module.label }}</span>
                         </a>
                     {% else %}
                         {# Sin href: el enlace no es navegable mientras el módulo no exista. #}
-                        <a class="nav-item disabled" aria-disabled="true">
-                            {{ module.label }}
+                        <a class="nav-item disabled" aria-disabled="true" title="Módulo en desarrollo">
+                            {{ nav_icon(module.key) }}
+                            <span>{{ module.label }}</span>
                         </a>
                     {% endif %}
                 {% endfor %}
@@ -87,7 +144,7 @@
             </div>
         </aside>
 
-        <main class="main-content">
+        <main id="main-content" class="main-content" tabindex="-1">
 
             <!-- Encabezado común: título del módulo y acciones de actualización -->
             <header class="page-header">
@@ -103,7 +160,8 @@
                     Los IDs de este bloque son compartidos por todos los módulos:
                     el JavaScript de cada página los usa para mostrar la hora de
                     la última actualización, el botón "Actualizar" y el estado
-                    de la conexión con Oracle.
+                    de la conexión con Oracle. La actualización automática y el
+                    tema los controla static/js/layout.js.
                 #}
                 <div class="header-actions">
 
@@ -111,6 +169,15 @@
                         <span>Última actualización</span>
                         <strong id="last-updated">—</strong>
                     </div>
+
+                    <label class="auto-refresh">
+                        <span class="visually-hidden">Actualización automática</span>
+                        <select id="auto-refresh" class="select-input compact" title="Actualización automática">
+                            <option value="0">Auto: apagado</option>
+                            <option value="30">Auto: cada 30 s</option>
+                            <option value="60">Auto: cada 60 s</option>
+                        </select>
+                    </label>
 
                     <button
                         id="refresh-button"
@@ -120,10 +187,25 @@
                         Actualizar
                     </button>
 
-                    <div id="connection-state" class="connection-state">
-                        <span class="status-dot"></span>
+                    {# role="status": los lectores de pantalla anuncian los cambios
+                       de conexión ("Conectado", "Sin conexión") sin mover el foco. #}
+                    <div id="connection-state" class="connection-state" role="status" aria-live="polite">
+                        <span class="status-dot" aria-hidden="true"></span>
                         <span id="connection-text">Conectando...</span>
                     </div>
+
+                    <button
+                        id="theme-toggle"
+                        class="icon-button"
+                        type="button"
+                        aria-label="Cambiar a tema oscuro"
+                        title="Cambiar tema"
+                    >
+                        {# Luna (tema claro activo) y sol (tema oscuro activo);
+                           el CSS muestra solo el que corresponde. #}
+                        <svg class="icon-moon" aria-hidden="true" focusable="false" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9z"/></svg>
+                        <svg class="icon-sun" aria-hidden="true" focusable="false" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+                    </button>
 
                 </div>
             </header>
@@ -133,6 +215,9 @@
 
         </main>
     </div>
+
+    <!-- Comportamiento común: tema y actualización automática -->
+    <script src="{{ url_for('static', path='js/layout.js') }}"></script>
 
     <!-- Scripts específicos del módulo -->
     {% block scripts %}{% endblock %}

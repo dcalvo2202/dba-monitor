@@ -53,11 +53,39 @@ function switchTab(tabName) {
 
         button.classList.toggle("is-active", isActive);
         button.setAttribute("aria-selected", String(isActive));
+        // Solo la pestaña activa es alcanzable con Tab (roving tabindex).
+        button.tabIndex = isActive ? 0 : -1;
     });
 
     document.querySelectorAll(".tab-panel").forEach((panel) => {
         panel.hidden = panel.id !== `tab-${tabName}`;
     });
+}
+
+/**
+ * Navegación por teclado entre pestañas (patrón WAI-ARIA):
+ * flechas izquierda/derecha para moverse, Inicio/Fin para ir a la
+ * primera/última. La pestaña enfocada se activa de inmediato.
+ * @param {KeyboardEvent} event
+ */
+function handleTabKeydown(event) {
+    const buttons = [...document.querySelectorAll(".tab-button")];
+    const currentIndex = buttons.indexOf(event.currentTarget);
+
+    const targetIndex = {
+        ArrowRight: (currentIndex + 1) % buttons.length,
+        ArrowLeft: (currentIndex - 1 + buttons.length) % buttons.length,
+        Home: 0,
+        End: buttons.length - 1
+    }[event.key];
+
+    if (targetIndex === undefined) {
+        return;
+    }
+
+    event.preventDefault();
+    buttons[targetIndex].focus();
+    switchTab(buttons[targetIndex].dataset.tab);
 }
 
 
@@ -721,6 +749,7 @@ async function loadAuditData() {
 document.addEventListener("DOMContentLoaded", () => {
     document.querySelectorAll(".tab-button").forEach((button) => {
         button.addEventListener("click", () => switchTab(button.dataset.tab));
+        button.addEventListener("keydown", handleTabKeydown);
     });
 
     document.getElementById("refresh-button").addEventListener("click", loadAuditData);
