@@ -32,6 +32,8 @@ La documentación interactiva de todos los endpoints está en `/docs`.
 | Módulo | Endpoint | Descripción |
 | --- | --- | --- |
 | 1 - Instancia | GET /api/instance | Estado, memoria y PDBs de la instancia |
+| 1 - Instancia | GET /api/connections | Perfiles de conexión disponibles y el activo (sin contraseñas) |
+| 1 - Instancia | PUT /api/connections/active | Cambia la instancia monitoreada (`{"name": "cdb_root"}`); valida la conexión antes |
 | 5 - Auditoría | GET /api/audit/users | Usuarios y hallazgos de seguridad (`?include_oracle=true` incluye cuentas internas) |
 | 5 - Auditoría | GET /api/audit/users/{username}/privileges | Roles y privilegios directos y heredados (`?privilege_type=SISTEMA\|OBJETO&max_rows=200`) |
 | 5 - Auditoría | GET /api/audit/roles | Roles y su asignación |

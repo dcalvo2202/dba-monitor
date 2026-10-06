@@ -337,6 +337,41 @@ El `.gitignore` del proyecto ya excluye `.env`.
 
 Nunca se deben incluir contraseñas reales, cuentas administrativas o información sensible en commits.
 
+### 7.1 Perfiles de conexión (selector de instancia) — opcional
+
+El encabezado de la aplicación tiene un selector **Instancia** que permite cambiar la instancia o contenedor monitoreado sin modificar el código (requisito del Módulo 1).
+
+Sin configuración adicional, la aplicación usa un único perfil con los datos de `.env`. Para tener varios perfiles (por ejemplo, la PDB `XEPDB1` y el contenedor raíz `CDB$ROOT`):
+
+1. Crear el usuario común para la raíz, como `SYS AS SYSDBA` desde la raíz del proyecto. El script pide la contraseña sin mostrarla:
+
+```sql
+@sql/oracle/connections/setup/create_cdb_monitor.sql
+```
+
+2. Agregar esa contraseña al `.env`:
+
+```env
+DB_PASSWORD_CDB=CONTRASEÑA_LOCAL_CDB
+```
+
+3. Crear el archivo local de perfiles a partir de la plantilla:
+
+```powershell
+copy config\connections.example.json config\connections.json
+```
+
+4. Reiniciar uvicorn.
+
+```text
+config/connections.example.json   Se almacena en Git (plantilla, sin contraseñas)
+config/connections.json           NO se almacena en Git (cada integrante tiene el suyo)
+```
+
+Las contraseñas nunca van en el JSON: cada perfil indica en `password_env` qué variable del `.env` la contiene. Al cambiar de perfil, la aplicación prueba la conexión antes de activarlo; si falla, mantiene el perfil anterior y muestra el motivo.
+
+**¿Por qué un usuario común `C##`?** `DBA_MONITOR` es un usuario local de `XEPDB1` y no existe en la raíz. Para conectarse a `CDB$ROOT` se necesita un usuario común, cuyo nombre empieza por `C##`. Sus privilegios se otorgan con `CONTAINER = CURRENT`, por lo que solo valen en la raíz.
+
 ---
 
 ## 8. Probar la conexión desde Python
@@ -531,6 +566,18 @@ GRANT SELECT ON SYS.V_$INSTANCE TO DBA_MONITOR;
 
 y verificar que fue concedido desde `XEPDB1`.
 
+### V$PDBS vacía desde el perfil CDB$ROOT
+
+En la raíz, las vistas `V$` de un usuario común solo muestran los contenedores autorizados con el atributo `CONTAINER_DATA` (por defecto, solo la raíz). El script `create_cdb_monitor.sql` ya lo configura; si el usuario se creó antes, ejecutar como `SYS`:
+
+```sql
+ALTER USER C##DBA_MONITOR SET CONTAINER_DATA = ALL CONTAINER = CURRENT;
+```
+
+### Una página nueva responde "Not Found" después de un pull
+
+En Windows, `uvicorn --reload` a veces no detecta los cambios que llegan con `git pull` o al cambiar de rama. Detener el servidor con `Ctrl+C` y volver a ejecutar `uvicorn app.main:app --reload`.
+
 ### Las tipografías no cargan sin internet
 
 La interfaz usa las fuentes Fira Sans y Fira Code desde Google Fonts. Sin conexión a internet la aplicación funciona igual: el navegador usa automáticamente fuentes del sistema (Segoe UI, Consolas).
@@ -560,5 +607,6 @@ Actualmente se encuentra implementado:
 - Endpoint `/api/instance`.
 - Plantilla base del frontend (`base.html`) compartida por todos los módulos, con tema claro/oscuro, actualización automática opcional, menú adaptable a móvil y navegación accesible por teclado.
 - Módulo 5 - Auditoría (`/auditoria`): usuarios, roles, privilegios directos y heredados por roles, y objetos inválidos con sus errores de compilación.
+- Perfiles de conexión: selector de instancia en el encabezado (PDB `XEPDB1` y raíz `CDB$ROOT` con el usuario común `C##DBA_MONITOR`).
 
 Los demás requerimientos del Módulo 1 y los módulos posteriores se incorporarán progresivamente.

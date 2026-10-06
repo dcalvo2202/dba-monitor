@@ -1349,6 +1349,30 @@ select {
     overflow-y: auto;
 }
 
+/* Selector de instancia monitoreada (perfiles de conexión). */
+.profile-selector {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.profile-selector-label {
+    color: var(--text-secondary);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.profile-selector .select-input {
+    max-width: 260px;
+}
+
+/* Aviso cuando no se puede activar un perfil: ocupa todo el ancho, bajo
+   el encabezado y antes del contenido del módulo. */
+.profile-message {
+    margin: -14px 0 20px;
+}
+
 /* Respeta la preferencia del sistema de reducir animaciones. */
 @media (prefers-reduced-motion: reduce) {
     *,
