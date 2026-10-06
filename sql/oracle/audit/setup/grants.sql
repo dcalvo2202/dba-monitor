@@ -24,6 +24,12 @@
 ================================================================================
 */
 
+-- 0) Detener el script ante el primer error. Por defecto SQL*Plus continúa,
+--    y si fallara el cambio de contenedor los GRANT se intentarían en
+--    CDB$ROOT, donde DBA_MONITOR no existe.
+WHENEVER SQLERROR EXIT SQL.SQLCODE
+WHENEVER OSERROR EXIT FAILURE
+
 -- 1) Las vistas DBA_* de la PDB solo muestran sus propios usuarios y objetos,
 --    por eso los privilegios se otorgan dentro de XEPDB1 y no en CDB$ROOT.
 ALTER SESSION SET CONTAINER = XEPDB1;
@@ -47,6 +53,10 @@ FROM   dba_tab_privs
 WHERE  grantee = 'DBA_MONITOR'
 AND    table_name LIKE 'DBA\_%' ESCAPE '\'
 ORDER  BY table_name;
+
+-- Restablece el comportamiento por defecto de SQL*Plus para la sesión.
+WHENEVER SQLERROR CONTINUE
+WHENEVER OSERROR CONTINUE
 
 /*
 --------------------------------------------------------------------------------
