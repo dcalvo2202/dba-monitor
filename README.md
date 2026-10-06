@@ -20,10 +20,22 @@ docs/configuracion-local.md
 
 uvicorn app.main:app --reload
 
-## Endpoints actuales
+## Páginas
 
-- GET /
-- GET /api/instance
+- GET /            Módulo 1 - Estado general de la instancia
+- GET /auditoria   Módulo 5 - Auditoría
+
+## Endpoints de la API
+
+La documentación interactiva de todos los endpoints está en `/docs`.
+
+| Módulo | Endpoint | Descripción |
+| --- | --- | --- |
+| 1 - Instancia | GET /api/instance | Estado, memoria y PDBs de la instancia |
+| 5 - Auditoría | GET /api/audit/users | Usuarios y hallazgos de seguridad (`?include_oracle=true` incluye cuentas internas) |
+| 5 - Auditoría | GET /api/audit/users/{username}/privileges | Roles y privilegios directos y heredados (`?privilege_type=SISTEMA\|OBJETO&max_rows=200`) |
+| 5 - Auditoría | GET /api/audit/roles | Roles y su asignación |
+| 5 - Auditoría | GET /api/audit/invalid-objects | Objetos inválidos con errores de compilación |
 
 ## Documentación
 
