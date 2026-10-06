@@ -43,3 +43,17 @@ def root(request: Request):
         name="index.html",
         context={"active_module": "instance"},
     )
+
+
+@app.get("/auditoria")
+def audit_page(request: Request):
+    """Página del Módulo 5 (Auditoría).
+
+    La plantilla solo contiene la estructura; los datos se cargan desde
+    /api/audit/* mediante static/js/audit.js.
+    """
+    return templates.TemplateResponse(
+        request=request,
+        name="audit.html",
+        context={"active_module": "audit"},
+    )
