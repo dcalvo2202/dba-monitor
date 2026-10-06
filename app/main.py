@@ -4,6 +4,7 @@ from fastapi import FastAPI, Request
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
 
+from app.modules.audit.router import router as audit_router
 from app.modules.instance.router import router as instance_router
 
 
@@ -27,6 +28,7 @@ app.mount(
 )
 
 app.include_router(instance_router)
+app.include_router(audit_router)
 
 
 @app.get("/")
@@ -40,4 +42,18 @@ def root(request: Request):
         request=request,
         name="index.html",
         context={"active_module": "instance"},
+    )
+
+
+@app.get("/auditoria")
+def audit_page(request: Request):
+    """Página del Módulo 5 (Auditoría).
+
+    La plantilla solo contiene la estructura; los datos se cargan desde
+    /api/audit/* mediante static/js/audit.js.
+    """
+    return templates.TemplateResponse(
+        request=request,
+        name="audit.html",
+        context={"active_module": "audit"},
     )

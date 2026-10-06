@@ -190,21 +190,62 @@ Ejecutar:
 GRANT CREATE SESSION TO DBA_MONITOR;
 ```
 
-### 5.5 Permiso requerido actualmente para el Módulo 1
+### 5.5 Permisos requeridos por el Módulo 1 - Estado de la instancia
 
-La primera funcionalidad implementada consulta información de la instancia mediante `V$INSTANCE`.
+El Módulo 1 consulta vistas dinámicas de rendimiento (`V$`). En Oracle, `V$INSTANCE` es un sinónimo público de la vista `SYS.V_$INSTANCE`; por eso el privilegio se otorga sobre `V_$...`.
 
-Conceder únicamente el privilegio necesario:
+Conceder únicamente los privilegios necesarios:
 
 ```sql
-GRANT SELECT ON SYS.V_$INSTANCE TO DBA_MONITOR;
+GRANT SELECT ON SYS.V_$INSTANCE TO DBA_MONITOR;  -- identificación, estado y tiempo de actividad
+GRANT SELECT ON SYS.V_$SGA      TO DBA_MONITOR;  -- memoria SGA asignada
+GRANT SELECT ON SYS.V_$SGASTAT  TO DBA_MONITOR;  -- memoria SGA libre
+GRANT SELECT ON SYS.V_$PGASTAT  TO DBA_MONITOR;  -- memoria PGA asignada y en uso
+GRANT SELECT ON SYS.V_$PDBS     TO DBA_MONITOR;  -- bases de datos (PDBs) visibles
 ```
 
-Los privilegios actuales de la cuenta quedan limitados a:
+### 5.6 Permisos requeridos por el Módulo 5 - Auditoría
+
+El Módulo 5 consulta vistas `DBA_*` del diccionario de datos. Los privilegios están en un script que fija y verifica el contenedor `XEPDB1`.
+
+Desde la raíz del proyecto:
+
+```powershell
+sqlplus / as sysdba
+```
+
+```sql
+@sql/oracle/audit/setup/grants.sql
+```
+
+El script otorga `SELECT` sobre `DBA_USERS`, `DBA_ROLES`, `DBA_ROLE_PRIVS`, `DBA_SYS_PRIVS`, `DBA_TAB_PRIVS`, `DBA_OBJECTS` y `DBA_ERRORS`.
+
+#### Datos de prueba de auditoría
+
+Una instalación limpia de Oracle XE no tiene objetos inválidos. Para demostrar el módulo con información real, ejecutar una vez (también como `SYS AS SYSDBA`):
+
+```sql
+@sql/oracle/audit/setup/demo_objects.sql
+```
+
+Crea en `XEPDB1` el usuario sin contraseña `AUDIT_DEMO` (schema-only), tres roles (dos anidados, uno de ellos alcanzable por dos caminos, y uno no predeterminado) y tres objetos inválidos con errores de compilación. Los mensajes `Warning: ... compilation errors` son el resultado esperado. El script puede ejecutarse varias veces: elimina el escenario anterior antes de recrearlo. Al final incluye la reversión (`DROP USER AUDIT_DEMO CASCADE` y `DROP ROLE ...`).
+
+### 5.7 Privilegios actuales de DBA_MONITOR
+
+Con los módulos actuales, la cuenta queda limitada a:
 
 ```text
 CREATE SESSION
-SELECT ON SYS.V_$INSTANCE
+SELECT ON SYS.V_$INSTANCE, SYS.V_$SGA, SYS.V_$SGASTAT, SYS.V_$PGASTAT, SYS.V_$PDBS
+SELECT ON SYS.DBA_USERS, SYS.DBA_ROLES, SYS.DBA_ROLE_PRIVS, SYS.DBA_SYS_PRIVS,
+          SYS.DBA_TAB_PRIVS, SYS.DBA_OBJECTS, SYS.DBA_ERRORS
+```
+
+Para comprobarlos, conectado como `DBA_MONITOR`:
+
+```sql
+SELECT privilege FROM user_sys_privs;
+SELECT table_name, privilege FROM user_tab_privs ORDER BY table_name;
 ```
 
 No se debe ejecutar:
@@ -442,10 +483,19 @@ El objetivo es reducir el impacto que podría tener un problema en la aplicació
 
 Actualmente:
 
-| Necesidad | Privilegio |
-| --- | --- |
-| Conectarse a Oracle | `CREATE SESSION` |
-| Consultar estado básico de la instancia | `SELECT ON SYS.V_$INSTANCE` |
+| Módulo | Necesidad | Privilegio |
+| --- | --- | --- |
+| General | Conectarse a Oracle | `CREATE SESSION` |
+| 1 - Instancia | Identificación, estado y tiempo de actividad | `SELECT ON SYS.V_$INSTANCE` |
+| 1 - Instancia | Memoria SGA asignada y libre | `SELECT ON SYS.V_$SGA`, `SYS.V_$SGASTAT` |
+| 1 - Instancia | Memoria PGA | `SELECT ON SYS.V_$PGASTAT` |
+| 1 - Instancia | Bases de datos (PDBs) | `SELECT ON SYS.V_$PDBS` |
+| 5 - Auditoría | Usuarios registrados | `SELECT ON SYS.DBA_USERS` |
+| 5 - Auditoría | Roles y su asignación | `SELECT ON SYS.DBA_ROLES`, `SYS.DBA_ROLE_PRIVS` |
+| 5 - Auditoría | Privilegios de sistema y de objeto | `SELECT ON SYS.DBA_SYS_PRIVS`, `SYS.DBA_TAB_PRIVS` |
+| 5 - Auditoría | Objetos inválidos y errores de compilación | `SELECT ON SYS.DBA_OBJECTS`, `SYS.DBA_ERRORS` |
+
+Se otorgan privilegios sobre vistas concretas y no roles amplios como `DBA`, `SELECT_CATALOG_ROLE` o el privilegio `SELECT ANY DICTIONARY`, que darían acceso a todo el diccionario de datos.
 
 Esta tabla debe actualizarse cuando se incorporen nuevas consultas administrativas.
 
@@ -512,5 +562,7 @@ Actualmente se encuentra implementado:
 - Fecha de inicio.
 - Tiempo de actividad de la instancia.
 - Endpoint `/api/instance`.
+- Plantilla base del frontend (`base.html`) compartida por todos los módulos.
+- Módulo 5 - Auditoría (`/auditoria`): usuarios, roles, privilegios directos y heredados por roles, y objetos inválidos con sus errores de compilación.
 
 Los demás requerimientos del Módulo 1 y los módulos posteriores se incorporarán progresivamente.
