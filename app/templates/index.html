@@ -1,95 +1,22 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+{#
+    Módulo 1 - Estado general de la instancia del SGBD.
 
-    <title>DBA Monitor</title>
+    Hereda la estructura común de base.html y define solo el contenido
+    propio del módulo: tarjetas de resumen, información de la instancia,
+    memoria (SGA/PGA) y PDBs visibles. Los datos se cargan desde
+    /api/instance mediante static/js/instance.js.
+#}
+{% extends "base.html" %}
 
-    <link
-        rel="stylesheet"
-        href="{{ url_for('static', path='css/style.css') }}"
-    >
-</head>
+{% block page_title %}Estado general · DBA Monitor{% endblock %}
 
-<body>
-    <div class="app-layout">
+{% block eyebrow %}Módulo 1{% endblock %}
 
-        <aside class="sidebar">
-            <div class="brand">
-                <span class="brand-mark">DB</span>
+{% block heading %}Estado general de la instancia{% endblock %}
 
-                <div>
-                    <strong>DBA Monitor</strong>
-                    <span>Oracle Database</span>
-                </div>
-            </div>
+{% block description %}Información operativa de la instancia Oracle monitoreada.{% endblock %}
 
-            <nav class="navigation">
-                <a class="nav-item active" href="#">
-                    Estado general
-                </a>
-
-                <a class="nav-item disabled" href="#">
-                    Rendimiento
-                </a>
-
-                <a class="nav-item disabled" href="#">
-                    Almacenamiento
-                </a>
-
-                <a class="nav-item disabled" href="#">
-                    Respaldos
-                </a>
-
-                <a class="nav-item disabled" href="#">
-                    Auditoría
-                </a>
-
-                <a class="nav-item disabled" href="#">
-                    Mantenimiento
-                </a>
-            </nav>
-
-            <div class="sidebar-footer">
-                EIF402 · Administración de Bases de Datos
-            </div>
-        </aside>
-
-        <main class="main-content">
-
-            <header class="page-header">
-                <div>
-                    <p class="eyebrow">Módulo 1</p>
-                    <h1>Estado general de la instancia</h1>
-                    <p class="page-description">
-                        Información operativa de la instancia Oracle monitoreada.
-                    </p>
-                </div>
-
-                <div class="header-actions">
-
-                    <div class="update-info">
-                        <span>Última actualización</span>
-                        <strong id="last-updated">—</strong>
-                    </div>
-
-                    <button
-                        id="refresh-button"
-                        class="refresh-button"
-                        type="button"
-                    >
-                        Actualizar
-                    </button>
-
-                    <div id="connection-state" class="connection-state">
-                        <span class="status-dot"></span>
-                        <span id="connection-text">Conectando...</span>
-                    </div>
-
-                </div>
-            </header>
-
+{% block content %}
             <section class="summary-grid">
 
                 <article class="summary-card">
@@ -297,9 +224,8 @@
                     </table>
                 </div>
             </section>
+{% endblock %}
 
-        </main>
-    </div>
+{% block scripts %}
     <script src="{{ url_for('static', path='js/instance.js') }}"></script>
-</body>
-</html>
+{% endblock %}
