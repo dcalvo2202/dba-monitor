@@ -49,15 +49,20 @@
 </section>
 
 <!-- Navegación entre las secciones del módulo -->
-<nav class="tabs" role="tablist" aria-label="Secciones de auditoría">
-    <button class="tab-button is-active" type="button" role="tab" data-tab="users" aria-selected="true">Usuarios</button>
-    <button class="tab-button" type="button" role="tab" data-tab="roles" aria-selected="false">Roles</button>
-    <button class="tab-button" type="button" role="tab" data-tab="privileges" aria-selected="false">Privilegios</button>
-    <button class="tab-button" type="button" role="tab" data-tab="invalid" aria-selected="false">Objetos inválidos</button>
-</nav>
+{#
+    Patrón de pestañas accesible (WAI-ARIA): cada botón indica qué panel
+    controla (aria-controls) y solo la pestaña activa está en el orden de
+    tabulación (tabindex="0"); entre pestañas se navega con las flechas.
+#}
+<div class="tabs" role="tablist" aria-label="Secciones de auditoría">
+    <button id="tab-button-users" class="tab-button is-active" type="button" role="tab" data-tab="users" aria-controls="tab-users" aria-selected="true" tabindex="0">Usuarios</button>
+    <button id="tab-button-roles" class="tab-button" type="button" role="tab" data-tab="roles" aria-controls="tab-roles" aria-selected="false" tabindex="-1">Roles</button>
+    <button id="tab-button-privileges" class="tab-button" type="button" role="tab" data-tab="privileges" aria-controls="tab-privileges" aria-selected="false" tabindex="-1">Privilegios</button>
+    <button id="tab-button-invalid" class="tab-button" type="button" role="tab" data-tab="invalid" aria-controls="tab-invalid" aria-selected="false" tabindex="-1">Objetos inválidos</button>
+</div>
 
 <!-- Pestaña: Usuarios -->
-<section id="tab-users" class="panel tab-panel" role="tabpanel">
+<section id="tab-users" class="panel tab-panel" role="tabpanel" aria-labelledby="tab-button-users">
     <div class="panel-header">
         <div>
             <h2>Usuarios registrados</h2>
@@ -103,7 +108,7 @@
 </section>
 
 <!-- Pestaña: Roles -->
-<section id="tab-roles" class="panel tab-panel" role="tabpanel" hidden>
+<section id="tab-roles" class="panel tab-panel" role="tabpanel" aria-labelledby="tab-button-roles" hidden>
     <div class="panel-header">
         <div>
             <h2>Roles</h2>
@@ -145,7 +150,7 @@
 </section>
 
 <!-- Pestaña: Privilegios de un usuario -->
-<section id="tab-privileges" class="panel tab-panel" role="tabpanel" hidden>
+<section id="tab-privileges" class="panel tab-panel" role="tabpanel" aria-labelledby="tab-button-privileges" hidden>
     <div class="panel-header">
         <div>
             <h2>Privilegios de un usuario</h2>
@@ -154,6 +159,7 @@
     </div>
 
     <form id="privileges-form" class="toolbar">
+        <label class="visually-hidden" for="privileges-username">Usuario a consultar</label>
         <input
             id="privileges-username"
             class="search-input"
@@ -219,7 +225,7 @@
 </section>
 
 <!-- Pestaña: Objetos inválidos -->
-<section id="tab-invalid" class="panel tab-panel" role="tabpanel" hidden>
+<section id="tab-invalid" class="panel tab-panel" role="tabpanel" aria-labelledby="tab-button-invalid" hidden>
     <div class="panel-header">
         <div>
             <h2>Objetos inválidos</h2>
