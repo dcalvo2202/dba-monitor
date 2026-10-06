@@ -2,7 +2,18 @@ from app.modules.instance.repository import (
     get_instance_info,
     get_memory_info,
     get_pdbs,
+    get_sga_components,
 )
+
+
+# Nombre en español de cada componente de V$SGA, para el gráfico de
+# composición de la SGA. Un componente desconocido conserva su nombre.
+SGA_COMPONENT_LABELS = {
+    "Database Buffers": "Caché de datos",
+    "Variable Size": "Área variable (shared pool, large pool...)",
+    "Fixed Size": "Área fija",
+    "Redo Buffers": "Buffer de redo",
+}
 
 
 def format_uptime(total_seconds: int) -> str:
@@ -92,10 +103,30 @@ def get_pdb_status():
         for name, open_mode, restricted in rows
     ]
 
+def get_sga_components_status():
+    """Componentes de la SGA con su tamaño en MB y su porcentaje del total."""
+    rows = get_sga_components()
+    total_bytes = sum(value for _, value in rows) or 1
+
+    return [
+        {
+            "name": name,
+            "label": SGA_COMPONENT_LABELS.get(name, name),
+            "mb": bytes_to_mb(value),
+            "percent": round(value * 100 / total_bytes, 2),
+        }
+        for name, value in rows
+    ]
+
 def get_instance_overview():
     instance_status = get_instance_status()
     memory_status = get_memory_status()
     pdbs = get_pdb_status()
+
+    # Se agrega dentro de "memory" para mantener intacta la estructura que
+    # ya consume instance.js.
+    if memory_status is not None:
+        memory_status["sga_components"] = get_sga_components_status()
 
     if instance_status is None:
         return None

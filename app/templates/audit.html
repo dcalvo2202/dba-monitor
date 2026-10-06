@@ -8,6 +8,7 @@
     el JavaScript rellena.
 #}
 {% extends "base.html" %}
+{% from "_icons.html" import icon %}
 
 {% block page_title %}Auditoría · DBA Monitor{% endblock %}
 
@@ -23,24 +24,28 @@
 <section class="summary-grid">
 
     <article class="summary-card">
+        <span class="summary-icon">{{ icon("users") }}</span>
         <span class="summary-label">Usuarios</span>
         <strong id="summary-users">—</strong>
         <span id="summary-users-detail" class="summary-secondary">Cuentas registradas</span>
     </article>
 
     <article class="summary-card">
+        <span class="summary-icon">{{ icon("alert") }}</span>
         <span class="summary-label">Hallazgos de riesgo</span>
         <strong id="summary-risks" class="status-badge">—</strong>
         <span id="summary-risks-detail" class="summary-secondary">Cuentas con observaciones</span>
     </article>
 
     <article class="summary-card">
+        <span class="summary-icon">{{ icon("key") }}</span>
         <span class="summary-label">Roles</span>
         <strong id="summary-roles">—</strong>
         <span id="summary-roles-detail" class="summary-secondary">Roles definidos</span>
     </article>
 
     <article class="summary-card">
+        <span class="summary-icon">{{ icon("file-x") }}</span>
         <span class="summary-label">Objetos inválidos</span>
         <strong id="summary-invalid" class="status-badge">—</strong>
         <span id="summary-invalid-detail" class="summary-secondary">Requieren recompilación</span>
@@ -49,6 +54,36 @@
 </section>
 
 <!-- Navegación entre las secciones del módulo -->
+<!-- Panorama: gráficos de las cuentas cargadas (respetan la casilla
+     "Incluir cuentas internas de Oracle"). Los dibuja static/js/charts.js. -->
+<section class="chart-grid" aria-label="Panorama de seguridad">
+
+    <article class="panel chart-panel">
+        <div class="panel-header">
+            <div>
+                <h2>Cuentas por estado</h2>
+                <p>Proporción de cuentas abiertas, bloqueadas y expiradas.</p>
+            </div>
+        </div>
+        <div id="account-status-chart" class="chart-body">
+            <p class="viz-empty">Cargando información...</p>
+        </div>
+    </article>
+
+    <article class="panel chart-panel">
+        <div class="panel-header">
+            <div>
+                <h2>Privilegios sensibles por usuario</h2>
+                <p>Privilegios de sistema de alto impacto (ANY, ALTER SYSTEM, CREATE USER...).</p>
+            </div>
+        </div>
+        <div id="sensitive-privileges-chart" class="chart-body">
+            <p class="viz-empty">Cargando información...</p>
+        </div>
+    </article>
+
+</section>
+
 {#
     Patrón de pestañas accesible (WAI-ARIA): cada botón indica qué panel
     controla (aria-controls) y solo la pestaña activa está en el orden de
@@ -184,6 +219,9 @@
 
         <div id="privileges-summary" class="inline-summary"></div>
 
+        <h3 class="table-title">Privilegios por origen</h3>
+        <div id="privileges-origin-chart" class="chart-body"></div>
+
         <h3 class="table-title">Roles del usuario</h3>
         <div class="table-wrapper" role="region" aria-label="Roles del usuario" tabindex="0">
             <table>
@@ -233,6 +271,8 @@
         </div>
     </div>
 
+    <div id="invalid-types-chart" class="chart-body" aria-label="Objetos inválidos por tipo"></div>
+
     <div class="table-wrapper" role="region" aria-label="Tabla de objetos inválidos" tabindex="0">
         <table>
             <thead>
@@ -257,5 +297,6 @@
 
 {% block scripts %}
     <script src="{{ url_for('static', path='js/common.js') }}"></script>
+    <script src="{{ url_for('static', path='js/charts.js') }}"></script>
     <script src="{{ url_for('static', path='js/audit.js') }}"></script>
 {% endblock %}
