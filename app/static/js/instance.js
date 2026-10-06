@@ -315,7 +315,10 @@ function setRefreshState(isLoading) {
         return;
     }
 
-    button.disabled = isLoading;
+    // aria-disabled en lugar de disabled: un botón deshabilitado pierde el
+    // foco y quien usa teclado volvería al inicio de la página. Los clics
+    // repetidos durante la carga se ignoran en el listener del final.
+    button.setAttribute("aria-disabled", String(isLoading));
     button.textContent = isLoading
         ? "Actualizando..."
         : "Actualizar";
@@ -345,7 +348,14 @@ document.addEventListener(
 
         refreshButton.addEventListener(
             "click",
-            loadInstanceData
+            () => {
+                // Ignora el clic si ya hay una actualización en curso.
+                if (refreshButton.getAttribute("aria-disabled") === "true") {
+                    return;
+                }
+
+                loadInstanceData();
+            }
         );
 
         loadInstanceData();
