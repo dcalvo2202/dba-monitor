@@ -1,18 +1,149 @@
+/* ==========================================================================
+   Tokens de diseño
+   Todos los colores de la interfaz se definen aquí como variables. Los
+   componentes nunca usan un color directo: así el tema claro y el oscuro
+   se cambian en un solo lugar.
+   ========================================================================== */
+
 :root {
+    color-scheme: light;
+
+    /* Tipografía: Fira Sans para texto y Fira Code para datos técnicos
+       (nombres de objetos, versiones, valores). Si las fuentes de Google
+       no cargan (sin internet), se usan las del sistema. */
+    --font-body: "Fira Sans", "Segoe UI", Arial, sans-serif;
+    --font-mono: "Fira Code", Consolas, "Courier New", monospace;
+
+    /* Superficies */
     --bg-page: #f4f6f8;
     --bg-surface: #ffffff;
+    --bg-subtle: #fafbfc;
+    --bg-hover: #f0f2f4;
     --bg-sidebar: #18212b;
 
+    /* Texto */
     --text-primary: #1d2733;
-    --text-secondary: #657180;
+    --text-secondary: #5b6775;
     --text-sidebar: #d9e0e7;
+    --link: #2f5d7c;
 
+    /* Bordes y líneas */
     --border: #dfe4e8;
+    --border-subtle: #edf0f2;
+    --track: #e7ebee;
 
+    /* Acento e interacción */
+    --accent: #54758d;
+    --focus-ring: #2f6fa3;
+
+    /* Barra lateral (oscura en ambos temas) */
+    --sidebar-text-strong: #ffffff;
+    --sidebar-text-muted: #9aa8b6;
+    --sidebar-link: #c3ccd5;
+    --sidebar-hover: rgba(255, 255, 255, 0.06);
+    --sidebar-active: rgba(255, 255, 255, 0.1);
+    --sidebar-divider: rgba(255, 255, 255, 0.08);
+    --sidebar-mark-border: rgba(255, 255, 255, 0.28);
+
+    /* Estados: cada uno con texto, fondo y borde. El color nunca es la única
+       señal: los badges siempre incluyen texto (OPEN, ALTO, etc.). */
     --success: #218653;
     --success-soft: #e8f5ed;
+    --ok-text: #17683e;
+    --ok-bg: #e8f5ed;
+    --ok-border: #cbe8d7;
+    --warn-text: #7a5410;
+    --warn-bg: #fff7df;
+    --warn-border: #eadba8;
+    --error-text: #a03333;
+    --error-bg: #fbecec;
+    --error-border: #eccaca;
+    --neutral-text: #596675;
+    --neutral-bg: #eef1f4;
+    --neutral-border: #d9dfe4;
 
     --sidebar-width: 240px;
+}
+
+/*
+   Tema oscuro. Se aplica:
+   - automáticamente si el sistema operativo usa modo oscuro, salvo que el
+     usuario haya elegido "claro" con el botón de tema;
+   - siempre que el usuario elija "oscuro" con el botón de tema.
+   Los valores cumplen contraste mínimo 4.5:1 para texto.
+*/
+@media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+        color-scheme: dark;
+
+        --bg-page: #0f1620;
+        --bg-surface: #172130;
+        --bg-subtle: #1b2636;
+        --bg-hover: #213044;
+        --bg-sidebar: #0b1118;
+
+        --text-primary: #e6ecf2;
+        --text-secondary: #9fb0c1;
+        --link: #8cc4ef;
+
+        --border: #2a3a4f;
+        --border-subtle: #223146;
+        --track: #263547;
+
+        --accent: #6fa3c9;
+        --focus-ring: #8cc4ef;
+
+        --success: #3fbf7f;
+        --success-soft: #133524;
+        --ok-text: #6fdba3;
+        --ok-bg: #123324;
+        --ok-border: #1f5a3d;
+        --warn-text: #f1c86b;
+        --warn-bg: #3a2d10;
+        --warn-border: #6b5418;
+        --error-text: #f39a9a;
+        --error-bg: #3d1a1d;
+        --error-border: #6e2c31;
+        --neutral-text: #b4c1ce;
+        --neutral-bg: #223045;
+        --neutral-border: #34465d;
+    }
+}
+
+:root[data-theme="dark"] {
+    color-scheme: dark;
+
+    --bg-page: #0f1620;
+    --bg-surface: #172130;
+    --bg-subtle: #1b2636;
+    --bg-hover: #213044;
+    --bg-sidebar: #0b1118;
+
+    --text-primary: #e6ecf2;
+    --text-secondary: #9fb0c1;
+    --link: #8cc4ef;
+
+    --border: #2a3a4f;
+    --border-subtle: #223146;
+    --track: #263547;
+
+    --accent: #6fa3c9;
+    --focus-ring: #8cc4ef;
+
+    --success: #3fbf7f;
+    --success-soft: #133524;
+    --ok-text: #6fdba3;
+    --ok-bg: #123324;
+    --ok-border: #1f5a3d;
+    --warn-text: #f1c86b;
+    --warn-bg: #3a2d10;
+    --warn-border: #6b5418;
+    --error-text: #f39a9a;
+    --error-bg: #3d1a1d;
+    --error-border: #6e2c31;
+    --neutral-text: #b4c1ce;
+    --neutral-bg: #223045;
+    --neutral-border: #34465d;
 }
 
 * {
@@ -21,7 +152,8 @@
 
 body {
     margin: 0;
-    font-family: Arial, Helvetica, sans-serif;
+    font-family: var(--font-body);
+    line-height: 1.5;
     background: var(--bg-page);
     color: var(--text-primary);
 }
@@ -52,7 +184,7 @@ body {
     align-items: center;
     gap: 12px;
     padding: 0 8px 26px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    border-bottom: 1px solid var(--sidebar-divider);
 }
 
 .brand-mark {
@@ -62,7 +194,7 @@ body {
     display: grid;
     place-items: center;
 
-    border: 1px solid rgba(255, 255, 255, 0.28);
+    border: 1px solid var(--sidebar-mark-border);
     border-radius: 7px;
 
     font-size: 13px;
@@ -77,12 +209,12 @@ body {
 
 .brand strong {
     font-size: 15px;
-    color: #ffffff;
+    color: var(--sidebar-text-strong);
 }
 
 .brand span {
     font-size: 12px;
-    color: #91a0af;
+    color: var(--sidebar-text-muted);
 }
 
 .navigation {
@@ -95,7 +227,7 @@ body {
 .nav-item {
     padding: 10px 12px;
 
-    color: #b7c1cb;
+    color: var(--sidebar-link);
     text-decoration: none;
 
     font-size: 14px;
@@ -104,13 +236,13 @@ body {
 }
 
 .nav-item:hover {
-    background: rgba(255, 255, 255, 0.06);
-    color: #ffffff;
+    background: var(--sidebar-hover);
+    color: var(--sidebar-text-strong);
 }
 
 .nav-item.active {
-    background: rgba(255, 255, 255, 0.1);
-    color: #ffffff;
+    background: var(--sidebar-active);
+    color: var(--sidebar-text-strong);
     font-weight: 600;
 }
 
@@ -123,10 +255,10 @@ body {
     margin-top: auto;
     padding: 18px 8px 0;
 
-    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    border-top: 1px solid var(--sidebar-divider);
 
-    color: #768594;
-    font-size: 11px;
+    color: var(--sidebar-text-muted);
+    font-size: 12px;
     line-height: 1.5;
 }
 
@@ -182,10 +314,10 @@ body {
     padding: 8px 11px;
 
     background: var(--success-soft);
-    border: 1px solid #cbe8d7;
+    border: 1px solid var(--ok-border);
     border-radius: 5px;
 
-    color: #17683e;
+    color: var(--ok-text);
 
     font-size: 13px;
     font-weight: 600;
@@ -270,54 +402,54 @@ body {
 }
 
 .state-ok {
-    color: #17683e;
-    background: #e8f5ed;
-    border-color: #cbe8d7;
+    color: var(--ok-text);
+    background: var(--ok-bg);
+    border-color: var(--ok-border);
 }
 
 .state-warning {
-    color: #825b12;
-    background: #fff7df;
-    border-color: #eadba8;
+    color: var(--warn-text);
+    background: var(--warn-bg);
+    border-color: var(--warn-border);
 }
 
 .state-error {
-    color: #a03333;
-    background: #fbecec;
-    border-color: #eccaca;
+    color: var(--error-text);
+    background: var(--error-bg);
+    border-color: var(--error-border);
 }
 
 .state-neutral {
-    color: #596675;
-    background: #eef1f4;
-    border-color: #d9dfe4;
+    color: var(--neutral-text);
+    background: var(--neutral-bg);
+    border-color: var(--neutral-border);
 }
 
 
 /* Connection indicator */
 
 .connection-state.is-ok {
-    color: #17683e;
-    background: #e8f5ed;
-    border-color: #cbe8d7;
+    color: var(--ok-text);
+    background: var(--ok-bg);
+    border-color: var(--ok-border);
 }
 
 .connection-state.is-warning {
-    color: #825b12;
-    background: #fff7df;
-    border-color: #eadba8;
+    color: var(--warn-text);
+    background: var(--warn-bg);
+    border-color: var(--warn-border);
 }
 
 .connection-state.is-error {
-    color: #a03333;
-    background: #fbecec;
-    border-color: #eccaca;
+    color: var(--error-text);
+    background: var(--error-bg);
+    border-color: var(--error-border);
 }
 
 .connection-state.is-loading {
-    color: #596675;
-    background: #eef1f4;
-    border-color: #d9dfe4;
+    color: var(--neutral-text);
+    background: var(--neutral-bg);
+    border-color: var(--neutral-border);
 }
 
 .connection-state .status-dot {
@@ -375,7 +507,7 @@ body {
 
     padding: 13px 0;
 
-    border-bottom: 1px solid #edf0f2;
+    border-bottom: 1px solid var(--border-subtle);
 }
 
 .details-list div:last-child {
@@ -465,7 +597,7 @@ th,
 td {
     padding: 13px 22px;
 
-    border-bottom: 1px solid #edf0f2;
+    border-bottom: 1px solid var(--border-subtle);
 
     font-size: 13px;
     text-align: left;
@@ -474,7 +606,7 @@ td {
 th {
     color: var(--text-secondary);
 
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 700;
     letter-spacing: 0.04em;
     text-transform: uppercase;
@@ -575,7 +707,7 @@ tbody tr:last-child td {
 
     overflow: hidden;
 
-    background: #e7ebee;
+    background: var(--track);
     border-radius: 3px;
 }
 
@@ -583,7 +715,7 @@ tbody tr:last-child td {
     width: 0;
     height: 100%;
 
-    background: #54758d;
+    background: var(--accent);
     border-radius: 3px;
 
     transition: width 0.35s ease;
@@ -606,7 +738,7 @@ tbody tr:last-child td {
 
 .update-info span {
     color: var(--text-secondary);
-    font-size: 10px;
+    font-size: 11px;
     text-transform: uppercase;
     letter-spacing: 0.04em;
 }
@@ -633,7 +765,7 @@ tbody tr:last-child td {
 }
 
 .refresh-button:hover:not(:disabled) {
-    background: #f0f2f4;
+    background: var(--bg-hover);
 }
 
 .refresh-button:disabled {
@@ -684,11 +816,11 @@ tbody tr:last-child td {
 
 .tab-button:hover {
     color: var(--text-primary);
-    background: #f0f2f4;
+    background: var(--bg-hover);
 }
 
 .tab-button.is-active {
-    color: #ffffff;
+    color: var(--sidebar-text-strong);
     background: var(--bg-sidebar);
     border-color: var(--bg-sidebar);
 }
@@ -733,7 +865,7 @@ tbody tr:last-child td {
 .select-input:focus,
 .tab-button:focus-visible,
 .link-button:focus-visible {
-    outline: 2px solid #54758d;
+    outline: 2px solid var(--focus-ring);
     outline-offset: 1px;
 }
 
@@ -805,7 +937,7 @@ td > .table-status + .table-status {
     background: none;
     border: none;
 
-    color: #2f5d7c;
+    color: var(--link);
 
     font-family: inherit;
     font-size: 13px;
@@ -822,7 +954,7 @@ td > .table-status + .table-status {
 /* Errores de compilación desplegables */
 
 details summary {
-    color: #a03333;
+    color: var(--error-text);
     font-weight: 600;
     cursor: pointer;
 }
@@ -830,7 +962,7 @@ details summary {
 /* Fila de detalle que aparece debajo de un objeto con errores. */
 .detail-row td {
     padding-top: 0;
-    background: #fafbfc;
+    background: var(--bg-subtle);
 }
 
 .error-list {
@@ -841,7 +973,7 @@ details summary {
     white-space: pre-wrap;
 
     color: var(--text-secondary);
-    font-family: Consolas, "Courier New", monospace;
+    font-family: var(--font-mono);
     font-size: 12px;
     line-height: 1.5;
 }
@@ -873,7 +1005,7 @@ details summary {
 
 .summary-chip span {
     color: var(--text-secondary);
-    font-size: 11px;
+    font-size: 12px;
     text-transform: uppercase;
     letter-spacing: 0.04em;
 }
@@ -896,9 +1028,9 @@ details summary {
     margin: 6px 22px 0;
     padding: 9px 12px;
 
-    color: #825b12;
-    background: #fff7df;
-    border: 1px solid #eadba8;
+    color: var(--warn-text);
+    background: var(--warn-bg);
+    border: 1px solid var(--warn-border);
     border-radius: 5px;
 
     font-size: 12px;
@@ -920,5 +1052,296 @@ details summary {
     .select-input {
         min-width: 0;
         width: 100%;
+    }
+}
+
+
+/* ==========================================================================
+   Mejoras de experiencia de usuario (aplican a todos los módulos)
+   Basadas en la revisión con la guía ui-ux-pro-max: accesibilidad,
+   navegación por teclado, áreas táctiles, tema oscuro y movimiento reducido.
+   ========================================================================== */
+
+/* Profundidad sutil en las superficies (más marcada en tema oscuro). */
+.summary-card,
+.panel {
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05);
+}
+
+/* Datos técnicos (nombres de objetos, versiones, servicios) en fuente
+   monoespaciada; números con ancho fijo para que las cifras se alineen. */
+.cell-strong,
+.details-list dd,
+.summary-chip strong {
+    font-family: var(--font-mono);
+    font-size: 13px;
+}
+
+.summary-card strong,
+td,
+.memory-row strong,
+.update-info strong {
+    font-variant-numeric: tabular-nums;
+}
+
+/* Foco visible y consistente para TODO elemento interactivo al usar
+   teclado (:focus-visible no lo muestra al hacer clic con el mouse). */
+a:focus-visible,
+button:focus-visible,
+select:focus-visible,
+input:focus-visible,
+summary:focus-visible,
+.main-content:focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 2px;
+}
+
+.nav-item:focus-visible {
+    outline-color: var(--sidebar-text-strong);
+}
+
+/* Enlace "Saltar al contenido": invisible hasta recibir foco con Tab. */
+.skip-link {
+    position: absolute;
+    top: -100px;
+    left: 12px;
+    z-index: 100;
+
+    padding: 10px 14px;
+
+    background: var(--bg-surface);
+    border: 2px solid var(--focus-ring);
+    border-radius: 5px;
+
+    color: var(--text-primary);
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.skip-link:focus {
+    top: 12px;
+}
+
+/* Texto solo para lectores de pantalla. */
+.visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+}
+
+/* Menú lateral con íconos */
+.nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.nav-icon {
+    flex-shrink: 0;
+    width: 18px;
+    height: 18px;
+}
+
+/* Transiciones suaves (150-200 ms) en controles interactivos. */
+.refresh-button,
+.tab-button,
+.icon-button,
+.link-button,
+.select-input,
+.search-input {
+    transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+/* Filas de tabla resaltadas al pasar el cursor para seguir la lectura. */
+tbody tr:not(.detail-row):hover td {
+    background: var(--bg-hover);
+}
+
+/* Botón de tema (solo ícono, con etiqueta accesible en el HTML). */
+.icon-button {
+    display: inline-grid;
+    place-items: center;
+
+    width: 36px;
+    height: 36px;
+    padding: 0;
+
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+
+    color: var(--text-primary);
+    cursor: pointer;
+}
+
+.icon-button:hover {
+    background: var(--bg-hover);
+}
+
+.icon-button svg {
+    width: 18px;
+    height: 18px;
+}
+
+/* Muestra la luna en tema claro y el sol en tema oscuro. */
+.icon-sun {
+    display: none;
+}
+
+:root[data-theme="dark"] .icon-sun {
+    display: block;
+}
+
+:root[data-theme="dark"] .icon-moon {
+    display: none;
+}
+
+@media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) .icon-sun {
+        display: block;
+    }
+
+    :root:not([data-theme="light"]) .icon-moon {
+        display: none;
+    }
+}
+
+/* Selector compacto del encabezado (actualización automática). */
+.select-input.compact {
+    min-width: 0;
+    padding: 7px 9px;
+    cursor: pointer;
+}
+
+.refresh-button,
+.tab-button,
+.link-button,
+.checkbox-label,
+select {
+    cursor: pointer;
+}
+
+.checkbox-label input {
+    width: 16px;
+    height: 16px;
+    accent-color: var(--accent);
+}
+
+/* Tema oscuro: ajustes que no se resuelven solo con tokens. */
+:root[data-theme="dark"] .summary-card,
+:root[data-theme="dark"] .panel {
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+}
+
+@media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) .summary-card,
+    :root:not([data-theme="light"]) .panel {
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+    }
+}
+
+/* Pantallas táctiles: áreas de toque de al menos 44 px. */
+@media (pointer: coarse) {
+    .refresh-button,
+    .tab-button,
+    .icon-button,
+    .select-input,
+    .search-input,
+    .nav-item {
+        min-height: 44px;
+    }
+
+    .icon-button {
+        width: 44px;
+    }
+
+    .link-button {
+        display: inline-flex;
+        align-items: center;
+        min-height: 44px;
+    }
+
+    .checkbox-label {
+        min-height: 44px;
+    }
+
+    .checkbox-label input {
+        width: 20px;
+        height: 20px;
+    }
+}
+
+/* Móvil: el menú lateral se convierte en una barra horizontal desplazable
+   (antes se ocultaba y no había forma de cambiar de módulo). */
+@media (max-width: 700px) {
+    .navigation {
+        display: flex;
+        flex-direction: row;
+        gap: 6px;
+
+        margin-top: 14px;
+        padding-bottom: 4px;
+
+        overflow-x: auto;
+        scrollbar-width: thin;
+    }
+
+    .nav-item {
+        flex-shrink: 0;
+        white-space: nowrap;
+    }
+
+    .brand {
+        padding-bottom: 14px;
+    }
+}
+
+/* Encabezado adaptable: si el título y las acciones no caben en una
+   línea, las acciones pasan debajo en lugar de comprimir el título. */
+.page-header {
+    flex-wrap: wrap;
+    row-gap: 16px;
+}
+
+.page-header > div:first-child {
+    flex: 1 1 320px;
+}
+
+.header-actions {
+    flex-wrap: wrap;
+}
+
+/* Tarjetas de resumen: 4 columnas en pantallas anchas y 2 x 2 en
+   medianas, para que no se compriman ni quede una tarjeta sola. */
+@media (min-width: 701px) and (max-width: 1180px) {
+    .summary-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 700px) {
+    /* En columna, flex-basis se aplicaría a la altura: se anula. */
+    .page-header > div:first-child {
+        flex-basis: auto;
+    }
+}
+
+.summary-card strong {
+    overflow-wrap: anywhere;
+}
+
+/* Respeta la preferencia del sistema de reducir animaciones. */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        transition-duration: 0.01ms !important;
+        animation-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
     }
 }
