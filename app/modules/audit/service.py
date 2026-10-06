@@ -5,7 +5,7 @@ Toma las filas que entrega `repository.py` y las convierte en información
 
 - Resume la cantidad de usuarios, roles y objetos inválidos.
 - Detecta situaciones de riesgo de seguridad en cada cuenta (rol DBA,
-  privilegios "ANY", cuentas expiradas o bloqueadas...).
+  privilegios de sistema sensibles, cuentas expiradas o bloqueadas...).
 - Agrupa los errores de compilación bajo el objeto al que pertenecen y
   explica por qué está inválido.
 
@@ -26,8 +26,24 @@ RISK_MEDIUM = "MEDIO"
 RISK_INFO = "INFO"
 
 # Límite por defecto de privilegios devueltos por consulta (ver
-# get_user_privileges.sql: SYS supera los 90 000 privilegios de objeto).
+# get_user_privileges.sql: SYS tiene cerca de 7 000 privilegios distintos).
 DEFAULT_PRIVILEGE_LIMIT = 200
+
+# Privilegios de sistema considerados sensibles, además de todos los que
+# contienen " ANY " (actúan sobre objetos de cualquier esquema) y los que
+# empiezan por "ADMINISTER ". Debe coincidir con el filtro de get_users.sql.
+SENSITIVE_SYSTEM_PRIVILEGES = frozenset({
+    "ALTER SYSTEM",
+    "ALTER DATABASE",
+    "AUDIT SYSTEM",
+    "CREATE USER",
+    "ALTER USER",
+    "DROP USER",
+    "BECOME USER",
+    "UNLIMITED TABLESPACE",
+    "EXEMPT ACCESS POLICY",
+    "EXEMPT REDACTION POLICY",
+})
 
 
 class UserNotFoundError(Exception):
@@ -37,6 +53,34 @@ class UserNotFoundError(Exception):
 def _risk(level: str, message: str) -> dict[str, str]:
     """Crea un hallazgo de riesgo con su nivel y una explicación legible."""
     return {"level": level, "message": message}
+
+
+def is_sensitive_privilege(privilege_type: str, privilege: str) -> bool:
+    """True si es un privilegio de sistema con alto impacto en la seguridad.
+
+    Args:
+        privilege_type: 'SISTEMA' u 'OBJETO'. Los de objeto afectan a un
+            único objeto y no se consideran sensibles por sí mismos.
+        privilege: Nombre del privilegio (ej. 'SELECT ANY TABLE').
+    """
+    if privilege_type != "SISTEMA":
+        return False
+
+    return (
+        " ANY " in privilege
+        or privilege.startswith("ADMINISTER ")
+        or privilege in SENSITIVE_SYSTEM_PRIVILEGES
+    )
+
+
+def _is_expired(status: str | None) -> bool:
+    """True si la contraseña está vencida (no cuenta el período de gracia)."""
+    return "EXPIRED" in (status or "") and "GRACE" not in (status or "")
+
+
+def _is_custom_account(record: dict[str, Any]) -> bool:
+    """True si la cuenta u objeto fue creado por el administrador, no por Oracle."""
+    return record["oracle_maintained"] == "N"
 
 
 def _assess_user(user: dict[str, Any]) -> list[dict[str, str]]:
@@ -51,7 +95,7 @@ def _assess_user(user: dict[str, Any]) -> list[dict[str, str]]:
     """
     risks = []
     status = user["account_status"] or ""
-    is_custom_account = user["oracle_maintained"] == "N"
+    is_custom_account = _is_custom_account(user)
 
     if is_custom_account and user["has_dba_role"] == "Y":
         risks.append(_risk(
@@ -59,18 +103,25 @@ def _assess_user(user: dict[str, Any]) -> list[dict[str, str]]:
             "Tiene el rol DBA: control total de la base de datos.",
         ))
 
-    if is_custom_account and user["any_privilege_count"]:
+    if is_custom_account and user["sensitive_privilege_count"]:
         risks.append(_risk(
             RISK_MEDIUM,
-            f"Tiene {user['any_privilege_count']} privilegio(s) ANY, que "
-            "actúan sobre objetos de cualquier esquema.",
+            f"Tiene {user['sensitive_privilege_count']} privilegio(s) de "
+            "sistema sensibles (ANY, ALTER SYSTEM, CREATE USER...).",
         ))
 
     # ACCOUNT_STATUS puede combinar estados, ej. "EXPIRED & LOCKED".
-    if "EXPIRED" in status:
+    # EXPIRED(GRACE) significa que la contraseña está por vencer pero el
+    # usuario todavía puede ingresar; se reporta aparte con menor gravedad.
+    if _is_expired(status):
         risks.append(_risk(
             RISK_MEDIUM,
             "La contraseña expiró; el usuario debe cambiarla para ingresar.",
+        ))
+    elif "EXPIRED(GRACE)" in status:
+        risks.append(_risk(
+            RISK_INFO,
+            "La contraseña está en período de gracia y vencerá pronto.",
         ))
 
     if "LOCKED" in status:
@@ -102,13 +153,19 @@ def get_users_report(include_oracle: bool) -> dict[str, Any]:
     def count(condition) -> int:
         return sum(1 for user in users if condition(user))
 
+    # Los conteos de privilegios usan el mismo criterio que _assess_user:
+    # solo cuentas propias, para que el resumen coincida con los hallazgos.
     summary = {
         "total": len(users),
         "open": count(lambda u: u["account_status"] == "OPEN"),
         "locked": count(lambda u: "LOCKED" in (u["account_status"] or "")),
-        "expired": count(lambda u: "EXPIRED" in (u["account_status"] or "")),
-        "with_dba_role": count(lambda u: u["has_dba_role"] == "Y"),
-        "with_any_privileges": count(lambda u: u["any_privilege_count"] > 0),
+        "expired": count(lambda u: _is_expired(u["account_status"])),
+        "with_dba_role": count(
+            lambda u: _is_custom_account(u) and u["has_dba_role"] == "Y"
+        ),
+        "with_sensitive_privileges": count(
+            lambda u: _is_custom_account(u) and u["sensitive_privilege_count"] > 0
+        ),
         "with_high_risk": count(
             lambda u: any(r["level"] == RISK_HIGH for r in u["risks"])
         ),
@@ -125,20 +182,30 @@ def get_user_privileges_report(
     """Detalle de seguridad de un usuario: datos, roles y privilegios.
 
     Args:
-        username: Nombre del usuario (se normaliza a mayúsculas, como lo
-            almacena Oracle cuando se crea sin comillas).
+        username: Nombre del usuario. Se busca primero tal como se escribió
+            y, si no existe, en mayúsculas.
         privilege_type: 'SISTEMA', 'OBJETO' o None para ambos.
         max_rows: Máximo de privilegios devueltos.
 
     Raises:
         UserNotFoundError: Si el usuario no existe.
     """
-    normalized_username = username.strip().upper()
+    requested_username = username.strip()
 
-    user = repository.get_user(normalized_username)
+    # Oracle guarda en mayúsculas los nombres creados sin comillas
+    # (CREATE USER prueba -> PRUEBA), pero respeta mayúsculas y minúsculas
+    # si se crearon entre comillas (CREATE USER "Prueba"). Se intenta el
+    # nombre exacto primero para no perder estos últimos.
+    user = repository.get_user(requested_username)
+
+    if user is None and requested_username != requested_username.upper():
+        user = repository.get_user(requested_username.upper())
 
     if user is None:
-        raise UserNotFoundError(normalized_username)
+        raise UserNotFoundError(requested_username)
+
+    # A partir de aquí se usa el nombre tal como existe en Oracle.
+    normalized_username = user["username"]
 
     roles = repository.get_user_roles(normalized_username)
     privileges = repository.get_user_privileges(
@@ -154,6 +221,14 @@ def get_user_privileges_report(
     for privilege in privileges:
         privilege.pop("total_rows", None)
         privilege["is_inherited"] = privilege["origin"] != "DIRECTO"
+        privilege["is_sensitive"] = is_sensitive_privilege(
+            privilege["privilege_type"],
+            privilege["privilege"],
+        )
+
+    # Los privilegios de objeto de PUBLIC no se listan (son decenas de miles
+    # en una instalación de Oracle); se informan como resumen.
+    public_object_privileges = repository.get_public_object_privileges()
 
     return {
         "user": user,
@@ -163,9 +238,20 @@ def get_user_privileges_report(
         "total_privileges": total_privileges,
         "returned_privileges": len(privileges),
         "is_truncated": total_privileges > len(privileges),
+        "public_object_privileges": public_object_privileges,
         "summary": {
-            "direct_roles": sum(1 for r in roles if r["grant_level"] == 1),
+            "direct_roles": sum(
+                1 for r in roles
+                if r["grant_level"] == 1 and r["via_public"] == "N"
+            ),
             "inherited_roles": sum(1 for r in roles if r["grant_level"] > 1),
+            "public_roles": sum(1 for r in roles if r["via_public"] == "Y"),
+            "non_default_roles": sum(
+                1 for r in roles if r["default_role"] == "NO"
+            ),
+            "sensitive_privileges": sum(
+                1 for p in privileges if p["is_sensitive"]
+            ),
             "direct_privileges": sum(
                 1 for p in privileges if not p["is_inherited"]
             ),
@@ -183,13 +269,16 @@ def get_roles_report(include_oracle: bool) -> dict[str, Any]:
     """Listado de roles con el total de roles y de roles sin asignar.
 
     Un rol propio sin usuarios ni roles beneficiarios suele ser un rol
-    olvidado; conviene revisarlo o eliminarlo.
+    olvidado; conviene revisarlo o eliminarlo. Un rol otorgado a PUBLIC lo
+    reciben todos los usuarios, por lo que se destaca como riesgo.
     """
     roles = repository.get_roles(include_oracle)
 
     for role in roles:
         role["is_unused"] = (
-            role["user_grantees"] == 0 and role["role_grantees"] == 0
+            role["user_grantees"] == 0
+            and role["role_grantees"] == 0
+            and role["granted_to_public"] == "N"
         )
 
     return {
@@ -197,6 +286,9 @@ def get_roles_report(include_oracle: bool) -> dict[str, Any]:
             "total": len(roles),
             "custom": sum(1 for r in roles if r["oracle_maintained"] == "N"),
             "unused": sum(1 for r in roles if r["is_unused"]),
+            "granted_to_public": sum(
+                1 for r in roles if r["granted_to_public"] == "Y"
+            ),
         },
         "roles": roles,
     }
@@ -217,6 +309,12 @@ def get_invalid_objects_report() -> dict[str, Any]:
     errors_by_object = defaultdict(list)
 
     for error in errors:
+        # DBA_ERRORS también contiene advertencias del compilador PL/SQL
+        # (attribute = 'WARNING') que no invalidan el objeto. Solo se
+        # asocian los errores reales, igual que error_count en el SQL.
+        if error["attribute"] != "ERROR":
+            continue
+
         key = (error["owner"], error["name"], error["type"])
         errors_by_object[key].append({
             "line": error["line"],

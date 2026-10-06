@@ -23,6 +23,10 @@ SQL_DIR = (
     / "audit"
 )
 
+# Límite de tiempo de cada consulta (30 s). Las consultas del módulo tardan
+# menos de 0,5 s; el límite solo protege ante una base de datos colgada.
+QUERY_TIMEOUT_MS = 30_000
+
 
 def _fetch_all(file_name: str, params: dict[str, Any] | None = None) -> list[dict[str, Any]]:
     """Ejecuta una consulta del módulo y devuelve todas sus filas.
@@ -43,6 +47,11 @@ def _fetch_all(file_name: str, params: dict[str, Any] | None = None) -> list[dic
     query = (SQL_DIR / file_name).read_text(encoding="utf-8")
 
     connection = get_connection()
+
+    # Tiempo máximo por operación en milisegundos. Si Oracle no responde,
+    # python-oracledb lanza DPY-4024 (un oracledb.Error que el router
+    # convierte en 503) en lugar de dejar el hilo del servidor bloqueado.
+    connection.call_timeout = QUERY_TIMEOUT_MS
 
     try:
         cursor = connection.cursor()
@@ -109,6 +118,11 @@ def get_user_privileges(
             "max_rows": max_rows,
         },
     )
+
+
+def get_public_object_privileges() -> dict[str, Any]:
+    """Resumen de los privilegios de objeto otorgados a PUBLIC."""
+    return _fetch_all("get_public_object_privileges.sql")[0]
 
 
 def get_roles(include_oracle: bool) -> list[dict[str, Any]]:

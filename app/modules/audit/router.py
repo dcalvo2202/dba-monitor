@@ -38,10 +38,25 @@ def _run(operation: Callable[[], Any], description: str) -> Any:
 
     Raises:
         HTTPException 503: Oracle no está disponible o rechazó la consulta
-            (por ejemplo, falta un privilegio: ORA-00942).
+            (por ejemplo, falta un privilegio: ORA-00942), o la aplicación
+            no está configurada correctamente.
     """
     try:
         return operation()
+
+    except (ValueError, OSError) as error:
+        # ValueError: get_connection() detectó variables faltantes en .env.
+        # OSError: no se pudo leer el archivo .sql de la consulta.
+        # Sin este bloque llegarían al cliente como un 500 sin explicación.
+        logger.exception("Error de configuración al consultar %s", description)
+
+        raise HTTPException(
+            status_code=503,
+            detail=(
+                f"No se pudo consultar {description}: {error} "
+                "Revise el archivo .env y la instalación del proyecto."
+            ),
+        ) from error
 
     except oracledb.Error as error:
         # El detalle técnico completo queda en el log del servidor; al
@@ -79,7 +94,7 @@ def read_user_privileges(
     username: str,
     privilege_type: Literal["SISTEMA", "OBJETO"] | None = Query(
         None,
-        description="Filtrar por tipo de privilegio; vacío = ambos.",
+        description="Filtrar por tipo de privilegio; omitir el parámetro = ambos tipos.",
     ),
     max_rows: int = Query(
         service.DEFAULT_PRIVILEGE_LIMIT,

@@ -18,8 +18,14 @@
    oracle_maintained   'Y' si es un rol predefinido de Oracle.
    user_grantees       Usuarios que tienen el rol asignado directamente.
    role_grantees       Otros roles que contienen a este rol.
+   granted_to_public   'Y' si el rol está otorgado a PUBLIC: lo reciben
+                       TODOS los usuarios de la base de datos.
    sys_privilege_count Privilegios de sistema que otorga el rol.
    granted_roles       Roles que este rol contiene (separados por coma).
+
+ Notas:
+   - LISTAGG ... ON OVERFLOW TRUNCATE (Oracle 12.2+) evita el error
+     ORA-01489 si la lista de roles supera 4000 bytes.
 ================================================================================
 */
 SELECT r.role,
@@ -34,10 +40,18 @@ SELECT r.role,
         FROM   dba_role_privs rp
         JOIN   dba_roles r2 ON r2.role = rp.grantee
         WHERE  rp.granted_role = r.role) AS role_grantees,
+       CASE
+           WHEN EXISTS (SELECT 1
+                        FROM   dba_role_privs rp
+                        WHERE  rp.granted_role = r.role
+                        AND    rp.grantee = 'PUBLIC')
+           THEN 'Y'
+           ELSE 'N'
+       END AS granted_to_public,
        (SELECT COUNT(*)
         FROM   dba_sys_privs sp
         WHERE  sp.grantee = r.role) AS sys_privilege_count,
-       (SELECT LISTAGG(rp.granted_role, ', ')
+       (SELECT LISTAGG(rp.granted_role, ', ' ON OVERFLOW TRUNCATE '...' WITH COUNT)
                    WITHIN GROUP (ORDER BY rp.granted_role)
         FROM   dba_role_privs rp
         WHERE  rp.grantee = r.role) AS granted_roles
