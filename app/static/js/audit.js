@@ -29,7 +29,9 @@ const RISK_STATE_CLASS = {
 // tablas en el navegador sin volver a consultar Oracle.
 const auditState = {
     users: [],
-    roles: []
+    roles: [],
+    // Última respuesta dibujada de cada sección (ver renderIfChanged).
+    snapshots: { roles: null, invalid: null }
 };
 
 // Contadores de solicitudes. Si el usuario dispara una nueva carga antes de
@@ -259,6 +261,9 @@ function renderUsersTable() {
         const actionCell = document.createElement("td");
         const button = createElement("button", { className: "link-button", text: "Ver privilegios" });
         button.type = "button";
+        // Nombre accesible único: un lector de pantalla que lista los
+        // botones escucha "Ver privilegios de AUDIT_DEMO", no 3 iguales.
+        button.setAttribute("aria-label", `Ver privilegios de ${user.username}`);
         button.addEventListener("click", () => showUserPrivileges(user.username));
         actionCell.appendChild(button);
 
@@ -362,6 +367,11 @@ function renderRolesTable() {
 function showUserPrivileges(username) {
     document.getElementById("privileges-username").value = username;
     switchTab("privileges");
+
+    // El botón pulsado quedó dentro del panel que se acaba de ocultar; el
+    // foco se lleva a la pestaña Privilegios para no perder la posición.
+    document.getElementById("tab-button-privileges").focus();
+
     loadUserPrivileges();
 }
 
@@ -402,6 +412,11 @@ async function loadUserPrivileges() {
         result.hidden = false;
         message.hidden = true;
 
+        announce(
+            `Privilegios de ${report.user.username}: ` +
+            `${report.total_privileges} privilegios y ${report.roles.length} roles.`
+        );
+
     } catch (error) {
         if (sequence !== privilegesLoadSequence) {
             return;
@@ -410,6 +425,7 @@ async function loadUserPrivileges() {
         result.hidden = true;
         message.hidden = false;
         message.textContent = error.message;
+        announce(error.message);
     }
 }
 
@@ -658,12 +674,41 @@ function clearSummaryCard(valueId, detailId) {
 }
 
 /**
- * Habilita o deshabilita los controles que disparan una recarga completa.
+ * Marca la página como ocupada mientras se cargan datos.
+ *
+ * La casilla "Incluir cuentas internas" no se deshabilita: hacerlo le
+ * quitaría el foco a quien la acaba de usar con el teclado. Si se cambia
+ * durante una carga, el contador auditLoadSequence descarta la respuesta
+ * anterior y solo se dibuja la más reciente.
  * @param {boolean} isLoading
  */
 function setAuditControlsLoading(isLoading) {
     setRefreshState(isLoading);
-    document.getElementById("include-oracle").disabled = isLoading;
+
+    // aria-busy avisa a los lectores de pantalla que el contenido se está
+    // actualizando.
+    document.querySelectorAll(".tab-panel").forEach((panel) => {
+        panel.setAttribute("aria-busy", String(isLoading));
+    });
+}
+
+/**
+ * Dibuja una sección solo si sus datos cambiaron desde la última carga.
+ * Evita reconstruir tablas idénticas en cada actualización automática, lo
+ * que cerraría los errores desplegados o movería la lectura del usuario.
+ * @param {"roles"|"invalid"} section
+ * @param {object} data - Respuesta de la API.
+ * @param {() => void} render - Función que dibuja la sección.
+ */
+function renderIfChanged(section, data, render) {
+    const snapshot = JSON.stringify(data);
+
+    if (auditState.snapshots[section] === snapshot) {
+        return;
+    }
+
+    auditState.snapshots[section] = snapshot;
+    render();
 }
 
 async function loadAuditData() {
@@ -702,18 +747,24 @@ async function loadAuditData() {
 
         if (roles.status === "fulfilled") {
             auditState.roles = roles.value.roles;
-            renderRolesSummary(roles.value);
-            renderRolesTable();
+            renderIfChanged("roles", roles.value, () => {
+                renderRolesSummary(roles.value);
+                renderRolesTable();
+            });
         } else {
             auditState.roles = [];
+            auditState.snapshots.roles = null;
             clearSummaryCard("summary-roles", "summary-roles-detail");
             renderTableMessage(document.getElementById("roles-table-body"), 6, roles.reason.message);
         }
 
         if (invalid.status === "fulfilled") {
-            renderInvalidSummary(invalid.value);
-            renderInvalidObjects(invalid.value);
+            renderIfChanged("invalid", invalid.value, () => {
+                renderInvalidSummary(invalid.value);
+                renderInvalidObjects(invalid.value);
+            });
         } else {
+            auditState.snapshots.invalid = null;
             clearSummaryCard("summary-invalid", "summary-invalid-detail");
             renderTableMessage(document.getElementById("invalid-table-body"), 6, invalid.reason.message);
         }
@@ -742,6 +793,28 @@ async function loadAuditData() {
 }
 
 
+let searchAnnounceTimer = null;
+
+/**
+ * Anuncia a los lectores de pantalla cuántas filas quedan tras filtrar.
+ * Espera 600 ms sin escribir para no anunciar en cada tecla.
+ * @param {string} tableBodyId - id del <tbody> filtrado.
+ * @param {string} noun - Sustantivo del resultado, ej. "usuario(s)".
+ */
+function announceSearchResults(tableBodyId, noun) {
+    clearTimeout(searchAnnounceTimer);
+
+    searchAnnounceTimer = setTimeout(() => {
+        // Las filas de mensaje ("Ningún usuario coincide...") no cuentan.
+        const rows = document.querySelectorAll(
+            `#${tableBodyId} tr:not(:has(.table-message))`
+        ).length;
+
+        announce(rows === 0 ? "Sin resultados." : `${rows} ${noun} encontrados.`);
+    }, 600);
+}
+
+
 /* ------------------------------------------------------------------ */
 /* Inicialización                                                      */
 /* ------------------------------------------------------------------ */
@@ -752,12 +825,28 @@ document.addEventListener("DOMContentLoaded", () => {
         button.addEventListener("keydown", handleTabKeydown);
     });
 
-    document.getElementById("refresh-button").addEventListener("click", loadAuditData);
+    // Un clic mientras hay una carga en curso se ignora (el botón está
+    // marcado con aria-disabled, que no impide el clic por sí mismo).
+    document.getElementById("refresh-button").addEventListener("click", () => {
+        if (!isRefreshBusy()) {
+            loadAuditData();
+        }
+    });
+
+    // Cambiar la casilla siempre recarga: es una consulta distinta y la
+    // respuesta anterior, si sigue en curso, se descarta.
     document.getElementById("include-oracle").addEventListener("change", loadAuditData);
 
     // Los buscadores filtran en el navegador, sin nuevas consultas a Oracle.
-    document.getElementById("users-search").addEventListener("input", renderUsersTable);
-    document.getElementById("roles-search").addEventListener("input", renderRolesTable);
+    // Tras una pausa breve se anuncia cuántos resultados quedan.
+    document.getElementById("users-search").addEventListener("input", () => {
+        renderUsersTable();
+        announceSearchResults("users-table-body", "usuario(s)");
+    });
+    document.getElementById("roles-search").addEventListener("input", () => {
+        renderRolesTable();
+        announceSearchResults("roles-table-body", "rol(es)");
+    });
 
     document.getElementById("privileges-form").addEventListener("submit", (event) => {
         event.preventDefault();

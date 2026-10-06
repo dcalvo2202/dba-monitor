@@ -66,6 +66,11 @@
 }
 
 /*
+   IMPORTANTE: los tokens del tema oscuro están repetidos en DOS bloques
+   (el de prefers-color-scheme y el de [data-theme="dark"]). CSS no permite
+   compartir una lista de reglas entre ambos selectores, así que al cambiar
+   un color oscuro hay que editarlo en los dos bloques.
+
    Tema oscuro. Se aplica:
    - automáticamente si el sistema operativo usa modo oscuro, salvo que el
      usuario haya elegido "claro" con el botón de tema;
@@ -764,10 +769,11 @@ tbody tr:last-child td {
     cursor: pointer;
 }
 
-.refresh-button:hover:not(:disabled) {
+.refresh-button:hover:not(:disabled):not([aria-disabled="true"]) {
     background: var(--bg-hover);
 }
 
+.refresh-button[aria-disabled="true"],
 .refresh-button:disabled {
     opacity: 0.55;
     cursor: not-allowed;
@@ -1091,6 +1097,8 @@ button:focus-visible,
 select:focus-visible,
 input:focus-visible,
 summary:focus-visible,
+.table-wrapper:focus-visible,
+.tab-panel:focus-visible,
 .main-content:focus-visible {
     outline: 2px solid var(--focus-ring);
     outline-offset: 2px;
@@ -1333,6 +1341,12 @@ select {
 
 .summary-card strong {
     overflow-wrap: anywhere;
+}
+
+/* Barra lateral fija: si la ventana es muy baja (teléfono horizontal o
+   zoom alto), permite desplazarla para alcanzar todos los módulos. */
+.sidebar {
+    overflow-y: auto;
 }
 
 /* Respeta la preferencia del sistema de reducir animaciones. */

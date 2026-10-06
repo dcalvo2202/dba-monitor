@@ -71,8 +71,11 @@ function setConnectionState(state, text) {
 }
 
 /**
- * Habilita o deshabilita el botón "Actualizar" mientras se cargan datos,
- * para evitar solicitudes repetidas.
+ * Marca el botón "Actualizar" como ocupado mientras se cargan datos.
+ *
+ * Se usa aria-disabled en lugar de disabled: un botón deshabilitado pierde
+ * el foco, y quien navega con teclado volvería al inicio de la página. Los
+ * clics repetidos se ignoran comprobando isRefreshBusy().
  * @param {boolean} isLoading
  */
 function setRefreshState(isLoading) {
@@ -82,8 +85,35 @@ function setRefreshState(isLoading) {
         return;
     }
 
-    button.disabled = isLoading;
+    button.setAttribute("aria-disabled", String(isLoading));
     button.textContent = isLoading ? "Actualizando..." : "Actualizar";
+}
+
+/** True si el botón "Actualizar" indica que hay una carga en curso. */
+function isRefreshBusy() {
+    return document.getElementById("refresh-button")
+        ?.getAttribute("aria-disabled") === "true";
+}
+
+/**
+ * Envía un mensaje a los lectores de pantalla sin mostrarlo en pantalla
+ * (región #status-announcer de base.html). Útil para avisar resultados,
+ * ej. "12 usuarios encontrados".
+ * @param {string} message
+ */
+function announce(message) {
+    const region = document.getElementById("status-announcer");
+
+    if (!region) {
+        return;
+    }
+
+    // Vaciar y volver a escribir garantiza que se anuncie aunque el texto
+    // sea igual al anterior.
+    region.textContent = "";
+    window.setTimeout(() => {
+        region.textContent = message;
+    }, 50);
 }
 
 /** Muestra la hora actual como "Última actualización". */

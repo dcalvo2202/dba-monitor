@@ -85,7 +85,7 @@
         </label>
     </div>
 
-    <div class="table-wrapper">
+    <div class="table-wrapper" role="region" aria-label="Tabla de usuarios" tabindex="0">
         <table>
             <thead>
                 <tr>
@@ -96,7 +96,7 @@
                     <th>Último acceso</th>
                     <th>Perfil</th>
                     <th>Hallazgos</th>
-                    <th></th>
+                    <th><span class="visually-hidden">Acciones</span></th>
                 </tr>
             </thead>
 
@@ -129,7 +129,7 @@
         </span>
     </div>
 
-    <div class="table-wrapper">
+    <div class="table-wrapper" role="region" aria-label="Tabla de roles" tabindex="0">
         <table>
             <thead>
                 <tr>
@@ -185,7 +185,7 @@
         <div id="privileges-summary" class="inline-summary"></div>
 
         <h3 class="table-title">Roles del usuario</h3>
-        <div class="table-wrapper">
+        <div class="table-wrapper" role="region" aria-label="Roles del usuario" tabindex="0">
             <table>
                 <thead>
                     <tr>
@@ -203,7 +203,7 @@
         <h3 class="table-title">Privilegios efectivos</h3>
         <p id="privileges-truncated" class="notice" hidden></p>
         <p id="privileges-public-note" class="panel-message"></p>
-        <div class="table-wrapper">
+        <div class="table-wrapper" role="region" aria-label="Privilegios efectivos" tabindex="0">
             <table>
                 <thead>
                     <tr>
@@ -219,13 +219,13 @@
         </div>
     </div>
 
-    <p id="privileges-message" class="panel-message">
+    <p id="privileges-message" class="panel-message" role="status">
         Escriba un usuario o use "Ver privilegios" en la pestaña Usuarios.
     </p>
 </section>
 
 <!-- Pestaña: Objetos inválidos -->
-<section id="tab-invalid" class="panel tab-panel" role="tabpanel" aria-labelledby="tab-button-invalid" hidden>
+<section id="tab-invalid" class="panel tab-panel" role="tabpanel" aria-labelledby="tab-button-invalid" tabindex="0" hidden>
     <div class="panel-header">
         <div>
             <h2>Objetos inválidos</h2>
@@ -233,7 +233,7 @@
         </div>
     </div>
 
-    <div class="table-wrapper">
+    <div class="table-wrapper" role="region" aria-label="Tabla de objetos inválidos" tabindex="0">
         <table>
             <thead>
                 <tr>
