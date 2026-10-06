@@ -17,3 +17,6 @@ __pycache__/
 # Sistema operativo
 .DS_Store
 Thumbs.db
+
+# Perfiles de conexión locales (cada integrante tiene los suyos)
+config/connections.json
