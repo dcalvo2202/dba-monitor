@@ -4,6 +4,7 @@ from fastapi import FastAPI, Request
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
 
+from app.modules.audit.router import router as audit_router
 from app.modules.instance.router import router as instance_router
 
 
@@ -27,6 +28,7 @@ app.mount(
 )
 
 app.include_router(instance_router)
+app.include_router(audit_router)
 
 
 @app.get("/")
