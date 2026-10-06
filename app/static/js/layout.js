@@ -6,6 +6,9 @@
  *   - Actualización automática: selector del encabezado (apagada, 30 s o
  *     60 s). Funciona con cualquier módulo porque simplemente pulsa el botón
  *     "Actualizar" de la página, que cada módulo ya conecta a su propia carga.
+ *   - Anuncios accesibles: avisa a los lectores de pantalla solo cuando el
+ *     estado de la conexión cambia de verdad (no en cada actualización).
+ *   - Menú en móvil: deja visible el módulo activo en la barra horizontal.
  *
  * Todo está dentro de una función autoejecutable (IIFE) para no crear
  * variables globales que choquen con el JavaScript de cada módulo.
@@ -54,11 +57,13 @@
             : "light";
     }
 
-    /** Actualiza la etiqueta accesible del botón según el tema visible. */
+    /**
+     * Refleja el tema en el botón. La etiqueta accesible es fija
+     * ("Tema oscuro") y el estado se comunica con aria-pressed, que los
+     * lectores de pantalla anuncian como "activado" / "desactivado".
+     */
     function updateThemeButton(button) {
-        const nextTheme = currentTheme() === "dark" ? "claro" : "oscuro";
-        button.setAttribute("aria-label", `Cambiar a tema ${nextTheme}`);
-        button.title = `Cambiar a tema ${nextTheme}`;
+        button.setAttribute("aria-pressed", String(currentTheme() === "dark"));
     }
 
     function setupThemeToggle() {
@@ -79,7 +84,7 @@
         });
 
         // Si el usuario no eligió tema y cambia el del sistema operativo,
-        // la etiqueta del botón debe reflejarlo.
+        // el estado del botón debe reflejarlo.
         window.matchMedia("(prefers-color-scheme: dark)")
             .addEventListener("change", () => updateThemeButton(button));
     }
@@ -90,20 +95,57 @@
     /* -------------------------------------------------------------- */
 
     let autoRefreshTimer = null;
+    let autoRefreshSeconds = 0;
+    let lastRefreshAt = Date.now();
+
+    /**
+     * True si el botón "Actualizar" indica que hay una carga en curso.
+     * Los módulos marcan el botón como ocupado con aria-disabled="true"
+     * (o, en código anterior, con disabled) mientras consultan Oracle.
+     */
+    function isRefreshBusy(button) {
+        return button.disabled || button.getAttribute("aria-disabled") === "true";
+    }
+
+    /**
+     * True si el usuario está trabajando dentro del contenido: tiene el
+     * foco en un control de las tablas o paneles, o tiene abierto un bloque
+     * desplegable (ej. errores de compilación). Redibujar la página en ese
+     * momento le haría perder su lugar, así que la actualización espera.
+     */
+    function isUserInteracting() {
+        const active = document.activeElement;
+        const header = document.querySelector(".page-header");
+
+        // :focus-visible distingue el foco de teclado (o de un campo de
+        // texto en uso) del que deja un clic con el mouse; tras un clic la
+        // actualización automática sigue funcionando con normalidad.
+        const focusInContent =
+            active &&
+            active !== document.body &&
+            active.closest(".main-content") &&
+            !header?.contains(active) &&
+            active.matches(":focus-visible");
+
+        const hasOpenDetails = document.querySelector(".main-content details[open]") !== null;
+
+        return Boolean(focusInContent || hasOpenDetails);
+    }
 
     /**
      * Pulsa el botón "Actualizar" de la página, salvo que:
-     * - la pestaña del navegador esté oculta (no tiene sentido consultar
-     *   Oracle si nadie está mirando);
-     * - ya haya una actualización en curso (el botón está deshabilitado).
+     * - la pestaña del navegador esté oculta (nadie está mirando);
+     * - ya haya una actualización en curso;
+     * - el usuario esté interactuando con el contenido.
      */
     function triggerRefresh() {
         const button = document.getElementById("refresh-button");
 
-        if (document.hidden || !button || button.disabled) {
+        if (document.hidden || !button || isRefreshBusy(button) || isUserInteracting()) {
             return;
         }
 
+        lastRefreshAt = Date.now();
         button.click();
     }
 
@@ -111,6 +153,7 @@
     function applyAutoRefresh(seconds) {
         clearInterval(autoRefreshTimer);
         autoRefreshTimer = null;
+        autoRefreshSeconds = seconds;
 
         if (seconds > 0) {
             autoRefreshTimer = setInterval(triggerRefresh, seconds * 1000);
@@ -119,6 +162,7 @@
 
     function setupAutoRefresh() {
         const select = document.getElementById("auto-refresh");
+        const refreshButton = document.getElementById("refresh-button");
 
         if (!select) {
             return;
@@ -136,13 +180,71 @@
             applyAutoRefresh(Number(select.value));
         });
 
-        // Al volver a la pestaña después de un rato oculta, se actualiza de
-        // inmediato en lugar de esperar al siguiente ciclo.
+        // Una actualización manual también cuenta como reciente.
+        refreshButton?.addEventListener("click", () => {
+            lastRefreshAt = Date.now();
+        });
+
+        // Al volver a la pestaña solo se actualiza si los datos ya están
+        // viejos (pasó un ciclo completo). Se reinicia el temporizador para
+        // que no llegue otra actualización pocos segundos después.
         document.addEventListener("visibilitychange", () => {
-            if (!document.hidden && autoRefreshTimer !== null) {
+            if (document.hidden || autoRefreshTimer === null) {
+                return;
+            }
+
+            if (Date.now() - lastRefreshAt >= autoRefreshSeconds * 1000) {
                 triggerRefresh();
+                applyAutoRefresh(autoRefreshSeconds);
             }
         });
+    }
+
+
+    /* -------------------------------------------------------------- */
+    /* Anuncios para lectores de pantalla                              */
+    /* -------------------------------------------------------------- */
+
+    /**
+     * Observa el indicador de conexión del encabezado y anuncia solo los
+     * cambios de estado relevantes (ej. Conectado -> Sin conexión), nunca el
+     * "Actualizando..." intermedio. Así el lector de pantalla no repite
+     * mensajes cada 30 s con la actualización automática.
+     *
+     * Funciona con cualquier módulo: basta con que su JavaScript cambie las
+     * clases is-ok / is-warning / is-error / is-loading del indicador.
+     */
+    function setupConnectionAnnouncer() {
+        const indicator = document.getElementById("connection-state");
+        const politeRegion = document.getElementById("status-announcer");
+        const alertRegion = document.getElementById("alert-announcer");
+
+        if (!indicator || !politeRegion || !alertRegion) {
+            return;
+        }
+
+        const STATES = ["is-ok", "is-warning", "is-error"];
+        // El primer "Conectado" al cargar la página no se anuncia (es lo esperado).
+        let lastState = "is-ok";
+
+        new MutationObserver(() => {
+            const state = STATES.find((name) => indicator.classList.contains(name));
+
+            if (!state || state === lastState) {
+                return;
+            }
+
+            lastState = state;
+            const text = document.getElementById("connection-text")?.textContent ?? "";
+
+            // Los errores se anuncian como alerta (interrumpen); el resto, de
+            // forma cortés al terminar lo que se está leyendo.
+            if (state === "is-error") {
+                alertRegion.textContent = `Error de conexión: ${text}`;
+            } else {
+                politeRegion.textContent = `Estado de la conexión: ${text}`;
+            }
+        }).observe(indicator, { attributes: true, attributeFilter: ["class"] });
     }
 
 
@@ -175,6 +277,11 @@
     document.addEventListener("DOMContentLoaded", () => {
         setupThemeToggle();
         setupAutoRefresh();
+        setupConnectionAnnouncer();
         revealActiveNavItem();
+
+        // Las fuentes web pueden cambiar el ancho de los textos del menú;
+        // se vuelve a centrar cuando terminan de cargar.
+        document.fonts?.ready.then(revealActiveNavItem);
     });
 })();

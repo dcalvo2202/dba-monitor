@@ -17,6 +17,16 @@
 
     Variable de contexto esperada:
         active_module  Clave del módulo actual; marca su enlace como activo.
+
+    Regla para el JavaScript de cada módulo (la actualización automática de
+    static/js/layout.js depende de ella):
+        - Conectar la carga de datos al botón #refresh-button.
+        - Mientras carga, marcar el botón con aria-disabled="true" e ignorar
+          clics repetidos (ver setRefreshState en static/js/common.js). No
+          usar disabled: quita el foco a quien navega con teclado.
+        - Informar el resultado con las clases is-ok / is-warning / is-error
+          de #connection-state (ver setConnectionState en common.js); los
+          lectores de pantalla reciben el aviso automáticamente.
 #}
 
 {#
@@ -69,13 +79,28 @@
         }
     </script>
 
-    <!-- Tipografías Fira Sans (texto) y Fira Code (datos técnicos) -->
+    {#
+        Tipografías Fira Sans (texto) y Fira Code (datos técnicos).
+        Se cargan SIN bloquear la página: media="print" hace que el
+        navegador las descargue en segundo plano y onload las activa al
+        terminar. Si no hay internet (o la red bloquea Google), la página se
+        muestra de inmediato con las fuentes del sistema definidas en
+        style.css, en lugar de quedar en blanco esperando.
+    #}
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
         rel="stylesheet"
         href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Fira+Sans:wght@400;500;600;700&display=swap"
+        media="print"
+        onload="this.media='all'"
     >
+    <noscript>
+        <link
+            rel="stylesheet"
+            href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Fira+Sans:wght@400;500;600;700&display=swap"
+        >
+    </noscript>
 
     <link
         rel="stylesheet"
@@ -130,11 +155,14 @@
                             <span>{{ module.label }}</span>
                         </a>
                     {% else %}
-                        {# Sin href: el enlace no es navegable mientras el módulo no exista. #}
-                        <a class="nav-item disabled" aria-disabled="true" title="Módulo en desarrollo">
+                        {# Módulo sin página todavía: se muestra como texto (no enlace)
+                           y se indica su estado también a los lectores de pantalla,
+                           no solo con la opacidad. #}
+                        <span class="nav-item disabled">
                             {{ nav_icon(module.key) }}
                             <span>{{ module.label }}</span>
-                        </a>
+                            <span class="visually-hidden">(en desarrollo)</span>
+                        </span>
                     {% endif %}
                 {% endfor %}
             </nav>
@@ -187,19 +215,23 @@
                         Actualizar
                     </button>
 
-                    {# role="status": los lectores de pantalla anuncian los cambios
-                       de conexión ("Conectado", "Sin conexión") sin mover el foco. #}
-                    <div id="connection-state" class="connection-state" role="status" aria-live="polite">
+                    {# Indicador visual. Los avisos para lectores de pantalla se
+                       hacen en las regiones #status-announcer y #alert-announcer,
+                       solo cuando el estado cambia de verdad (ver layout.js). #}
+                    <div id="connection-state" class="connection-state">
                         <span class="status-dot" aria-hidden="true"></span>
                         <span id="connection-text">Conectando...</span>
                     </div>
 
+                    {# aria-pressed indica si el tema oscuro está activo; lo
+                       actualiza layout.js. #}
                     <button
                         id="theme-toggle"
                         class="icon-button"
                         type="button"
-                        aria-label="Cambiar a tema oscuro"
-                        title="Cambiar tema"
+                        aria-label="Tema oscuro"
+                        aria-pressed="false"
+                        title="Tema oscuro"
                     >
                         {# Luna (tema claro activo) y sol (tema oscuro activo);
                            el CSS muestra solo el que corresponde. #}
@@ -209,6 +241,10 @@
 
                 </div>
             </header>
+
+            <!-- Regiones invisibles para avisos a lectores de pantalla -->
+            <div id="status-announcer" class="visually-hidden" role="status" aria-live="polite"></div>
+            <div id="alert-announcer" class="visually-hidden" role="alert"></div>
 
             <!-- Contenido específico del módulo -->
             {% block content %}{% endblock %}
