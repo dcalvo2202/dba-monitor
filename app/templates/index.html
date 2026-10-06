@@ -7,6 +7,7 @@
     /api/instance mediante static/js/instance.js.
 #}
 {% extends "base.html" %}
+{% from "_icons.html" import icon %}
 
 {% block page_title %}Estado general · DBA Monitor{% endblock %}
 
@@ -20,24 +21,28 @@
             <section class="summary-grid">
 
                 <article class="summary-card">
+                    <span class="summary-icon">{{ icon("power") }}</span>
                     <span class="summary-label">Estado</span>
                     <strong id="instance-status" class="status-badge">—</strong>
                     <span class="summary-secondary">Instancia Oracle</span>
                 </article>
 
                 <article class="summary-card">
+                    <span class="summary-icon">{{ icon("server") }}</span>
                     <span class="summary-label">Instancia</span>
                     <strong id="instance-name">—</strong>
                     <span class="summary-secondary">Nombre de instancia</span>
                 </article>
 
                 <article class="summary-card">
+                    <span class="summary-icon">{{ icon("database") }}</span>
                     <span class="summary-label">PDB monitoreada</span>
                     <strong id="container-name">—</strong>
                     <span class="summary-secondary">Contenedor actual</span>
                 </article>
 
                 <article class="summary-card">
+                    <span class="summary-icon">{{ icon("clock") }}</span>
                     <span class="summary-label">Tiempo activa</span>
                     <strong id="instance-uptime">—</strong>
                     <span class="summary-secondary">Desde el último inicio</span>
@@ -196,6 +201,23 @@
 
             </section>
 
+            <!-- Composición de la SGA (V$SGA): gráfico de partes de un todo,
+                 dibujado por static/js/charts.js desde instance.js. -->
+            <section class="panel chart-panel">
+                <div class="panel-header">
+                    <div>
+                        <h2>Composición de la SGA</h2>
+                        <p>
+                            Cómo se reparte la memoria compartida de la instancia entre sus componentes.
+                        </p>
+                    </div>
+                </div>
+
+                <div id="sga-chart" class="chart-body">
+                    <p class="viz-empty">Cargando información...</p>
+                </div>
+            </section>
+
             <section class="panel pdb-panel">
                 <div class="panel-header">
                     <div>
@@ -227,5 +249,6 @@
 {% endblock %}
 
 {% block scripts %}
+    <script src="{{ url_for('static', path='js/charts.js') }}"></script>
     <script src="{{ url_for('static', path='js/instance.js') }}"></script>
 {% endblock %}

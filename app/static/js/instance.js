@@ -181,6 +181,31 @@ function renderPdbs(pdbs) {
     }
 }
 
+/**
+ * Dibuja el gráfico "Composición de la SGA" (partes de un todo) con los
+ * componentes de V$SGA. Usa DbaCharts de static/js/charts.js; si ese
+ * archivo no cargó, la página sigue funcionando sin el gráfico.
+ * @param {{label: string, mb: number}[] | undefined} components
+ */
+function renderSgaComposition(components) {
+    const container = document.getElementById("sga-chart");
+
+    if (!container || !window.DbaCharts) {
+        return;
+    }
+
+    window.DbaCharts.renderStackedBar(container, {
+        segments: (components ?? []).map((component) => ({
+            label: component.label,
+            value: component.mb
+        })),
+        ariaLabel: "Composición de la SGA por componente, en megabytes",
+        formatValue: (value) =>
+            `${window.DbaCharts.formatNumber(value, 1)} MB`,
+        emptyMessage: "No se pudo obtener la composición de la SGA."
+    });
+}
+
 function renderInstance(data) {
     renderInstanceStatus(data.status);
     setText("instance-name", data.instance_name);
@@ -261,6 +286,7 @@ function renderInstance(data) {
     }
 
     renderPdbs(data.pdbs);
+    renderSgaComposition(data.memory?.sga_components);
 
     setConnectionState("is-ok", "Conectado");
 }

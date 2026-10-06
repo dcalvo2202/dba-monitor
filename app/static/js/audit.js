@@ -206,6 +206,125 @@ function renderInvalidSummary(report) {
 
 
 /* ------------------------------------------------------------------ */
+/* Gráficos (static/js/charts.js)                                      */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Clasifica ACCOUNT_STATUS en las categorías del gráfico. Oracle combina
+ * estados (ej. "EXPIRED & LOCKED"); la expiración se considera primero
+ * porque es la que exige acción del administrador.
+ * @param {string} status
+ */
+function accountStatusCategory(status) {
+    if (status === "OPEN") {
+        return "Abiertas";
+    }
+
+    if (status?.includes("EXPIRED")) {
+        return "Expiradas";
+    }
+
+    if (status?.includes("LOCKED")) {
+        return "Bloqueadas";
+    }
+
+    return "Otros estados";
+}
+
+/** Cuenta elementos por categoría y los devuelve de mayor a menor. */
+function countBy(items, getCategory) {
+    const counts = new Map();
+
+    items.forEach((item) => {
+        const category = getCategory(item);
+        counts.set(category, (counts.get(category) ?? 0) + 1);
+    });
+
+    return [...counts.entries()]
+        .map(([label, value]) => ({ label, value }))
+        .sort((a, b) => b.value - a.value);
+}
+
+/** Reemplaza el contenido de un contenedor de gráfico por un mensaje. */
+function renderChartMessage(containerId, message) {
+    const container = document.getElementById(containerId);
+
+    if (container) {
+        container.replaceChildren(createElement("p", { className: "viz-empty", text: message }));
+    }
+}
+
+/** Dibuja los dos gráficos del panorama con los usuarios cargados. */
+function renderUsersCharts(users) {
+    if (!window.DbaCharts) {
+        return;
+    }
+
+    DbaCharts.renderStackedBar(document.getElementById("account-status-chart"), {
+        segments: countBy(users, (user) => accountStatusCategory(user.account_status)),
+        ariaLabel: "Cuentas por estado",
+        formatValue: (value) => `${value} cuenta(s)`,
+        emptyMessage: "No hay cuentas para mostrar."
+    });
+
+    DbaCharts.renderBarChart(document.getElementById("sensitive-privileges-chart"), {
+        items: users.map((user) => ({
+            label: user.username,
+            value: user.sensitive_privilege_count
+        })),
+        ariaLabel: "Privilegios de sistema sensibles por usuario",
+        maxItems: 6,
+        emptyMessage: "Ninguna de las cuentas mostradas tiene privilegios sensibles."
+    });
+}
+
+/** Gráfico de la pestaña Objetos inválidos: cantidad por tipo de objeto. */
+function renderInvalidTypesChart(objects) {
+    if (!window.DbaCharts) {
+        return;
+    }
+
+    DbaCharts.renderBarChart(document.getElementById("invalid-types-chart"), {
+        items: countBy(objects, (obj) => obj.object_type),
+        ariaLabel: "Objetos inválidos por tipo",
+        formatValue: (value) => `${value} objeto(s)`,
+        emptyMessage: "No hay objetos inválidos."
+    });
+}
+
+/**
+ * Gráfico de la pestaña Privilegios: de dónde vienen los privilegios del
+ * usuario (directos, por roles o por PUBLIC).
+ */
+function renderPrivilegesOriginChart(report) {
+    if (!window.DbaCharts) {
+        return;
+    }
+
+    const segments = countBy(report.privileges, (privilege) => {
+        if (privilege.origin === "DIRECTO") {
+            return "Directos";
+        }
+
+        return privilege.origin === "PUBLIC" ? "Por PUBLIC" : "Por roles";
+    });
+
+    // Si la API recortó la lista (cuentas como SYS), el gráfico describe
+    // solo los privilegios devueltos; se aclara en la etiqueta accesible.
+    const scope = report.is_truncated
+        ? ` (sobre los ${report.returned_privileges} privilegios mostrados)`
+        : "";
+
+    DbaCharts.renderStackedBar(document.getElementById("privileges-origin-chart"), {
+        segments,
+        ariaLabel: `Privilegios de ${report.user.username} por origen${scope}`,
+        formatValue: (value) => `${value} privilegio(s)`,
+        emptyMessage: "El usuario no tiene privilegios de este tipo."
+    });
+}
+
+
+/* ------------------------------------------------------------------ */
 /* Pestaña Usuarios                                                    */
 /* ------------------------------------------------------------------ */
 
@@ -432,6 +551,8 @@ async function loadUserPrivileges() {
 /** Dibuja el resumen, la tabla de roles y la de privilegios de un usuario. */
 function renderPrivilegesReport(report) {
     const { user, roles, privileges, summary } = report;
+
+    renderPrivilegesOriginChart(report);
 
     // Resumen en línea: datos clave del usuario consultado.
     const summaryElement = document.getElementById("privileges-summary");
@@ -737,11 +858,14 @@ async function loadAuditData() {
             renderUsersSummary(users.value);
             renderUsersTable();
             renderUsersDatalist();
+            renderUsersCharts(auditState.users);
         } else {
             auditState.users = [];
             renderUsersDatalist();
             clearSummaryCard("summary-users", "summary-users-detail");
             clearSummaryCard("summary-risks", "summary-risks-detail");
+            renderChartMessage("account-status-chart", users.reason.message);
+            renderChartMessage("sensitive-privileges-chart", users.reason.message);
             renderTableMessage(document.getElementById("users-table-body"), 8, users.reason.message);
         }
 
@@ -762,6 +886,7 @@ async function loadAuditData() {
             renderIfChanged("invalid", invalid.value, () => {
                 renderInvalidSummary(invalid.value);
                 renderInvalidObjects(invalid.value);
+                renderInvalidTypesChart(invalid.value.objects);
             });
         } else {
             auditState.snapshots.invalid = null;
