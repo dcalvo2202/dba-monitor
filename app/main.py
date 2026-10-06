@@ -31,8 +31,13 @@ app.include_router(instance_router)
 
 @app.get("/")
 def root(request: Request):
+    """Página del Módulo 1 (Estado general de la instancia).
+
+    `active_module` le indica a base.html qué enlace del menú lateral
+    debe marcarse como activo.
+    """
     return templates.TemplateResponse(
         request=request,
         name="index.html",
-        context={},
+        context={"active_module": "instance"},
     )

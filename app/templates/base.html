@@ -1,0 +1,140 @@
+{#
+    Plantilla base de DBA Monitor.
+
+    Define la estructura visual común a todos los módulos: <head>, barra
+    lateral de navegación y encabezado de página con las acciones de
+    actualización y el indicador de conexión.
+
+    Cada módulo crea su propia plantilla con {% extends "base.html" %} y
+    rellena únicamente los bloques que necesita:
+
+        page_title    Título de la pestaña del navegador.
+        eyebrow       Texto pequeño sobre el título (ej. "Módulo 1").
+        heading       Título principal de la página.
+        description   Descripción breve bajo el título.
+        content       Contenido propio del módulo.
+        scripts       Archivos JavaScript del módulo.
+
+    Variable de contexto esperada:
+        active_module  Clave del módulo actual; marca su enlace como activo.
+#}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>{% block page_title %}DBA Monitor{% endblock %}</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', path='css/style.css') }}"
+    >
+</head>
+
+<body>
+    {#
+        Catálogo de módulos del menú lateral.
+        - key:     identificador que se compara con active_module.
+        - url:     ruta de la página del módulo.
+        - enabled: False mientras el módulo no tenga página propia; se
+                   muestra atenuado y sin enlace. Al integrar un módulo
+                   nuevo basta con cambiar su valor a True.
+    #}
+    {% set modules = [
+        {"key": "instance",    "url": "/",               "label": "Estado general", "enabled": True},
+        {"key": "performance", "url": "/rendimiento",    "label": "Rendimiento",    "enabled": False},
+        {"key": "storage",     "url": "/almacenamiento", "label": "Almacenamiento", "enabled": False},
+        {"key": "backup",      "url": "/respaldos",      "label": "Respaldos",      "enabled": False},
+        {"key": "audit",       "url": "/auditoria",      "label": "Auditoría",      "enabled": False},
+        {"key": "maintenance", "url": "/mantenimiento",  "label": "Mantenimiento",  "enabled": False},
+    ] %}
+
+    <div class="app-layout">
+
+        <!-- Barra lateral: identidad de la aplicación y navegación entre módulos -->
+        <aside class="sidebar">
+            <div class="brand">
+                <span class="brand-mark">DB</span>
+
+                <div>
+                    <strong>DBA Monitor</strong>
+                    <span>Oracle Database</span>
+                </div>
+            </div>
+
+            <nav class="navigation">
+                {% for module in modules %}
+                    {% if module.enabled %}
+                        <a
+                            class="nav-item{% if module.key == active_module %} active{% endif %}"
+                            href="{{ module.url }}"
+                            {% if module.key == active_module %}aria-current="page"{% endif %}
+                        >
+                            {{ module.label }}
+                        </a>
+                    {% else %}
+                        {# Sin href: el enlace no es navegable mientras el módulo no exista. #}
+                        <a class="nav-item disabled" aria-disabled="true">
+                            {{ module.label }}
+                        </a>
+                    {% endif %}
+                {% endfor %}
+            </nav>
+
+            <div class="sidebar-footer">
+                EIF402 · Administración de Bases de Datos
+            </div>
+        </aside>
+
+        <main class="main-content">
+
+            <!-- Encabezado común: título del módulo y acciones de actualización -->
+            <header class="page-header">
+                <div>
+                    <p class="eyebrow">{% block eyebrow %}{% endblock %}</p>
+                    <h1>{% block heading %}{% endblock %}</h1>
+                    <p class="page-description">
+                        {% block description %}{% endblock %}
+                    </p>
+                </div>
+
+                {#
+                    Los IDs de este bloque son compartidos por todos los módulos:
+                    el JavaScript de cada página los usa para mostrar la hora de
+                    la última actualización, el botón "Actualizar" y el estado
+                    de la conexión con Oracle.
+                #}
+                <div class="header-actions">
+
+                    <div class="update-info">
+                        <span>Última actualización</span>
+                        <strong id="last-updated">—</strong>
+                    </div>
+
+                    <button
+                        id="refresh-button"
+                        class="refresh-button"
+                        type="button"
+                    >
+                        Actualizar
+                    </button>
+
+                    <div id="connection-state" class="connection-state">
+                        <span class="status-dot"></span>
+                        <span id="connection-text">Conectando...</span>
+                    </div>
+
+                </div>
+            </header>
+
+            <!-- Contenido específico del módulo -->
+            {% block content %}{% endblock %}
+
+        </main>
+    </div>
+
+    <!-- Scripts específicos del módulo -->
+    {% block scripts %}{% endblock %}
+</body>
+</html>
