@@ -126,7 +126,7 @@
         {"key": "performance", "url": "/rendimiento",    "label": "Rendimiento",    "enabled": False},
         {"key": "storage",     "url": "/almacenamiento", "label": "Almacenamiento", "enabled": False},
         {"key": "backup",      "url": "/respaldos",      "label": "Respaldos",      "enabled": False},
-        {"key": "audit",       "url": "/auditoria",      "label": "Auditoría",      "enabled": True},
+        {"key": "audit",       "url": "/auditoria",      "label": "Auditoría",      "enabled": False},
         {"key": "maintenance", "url": "/mantenimiento",  "label": "Mantenimiento",  "enabled": False},
     ] %}
 
@@ -192,17 +192,6 @@
                     tema los controla static/js/layout.js.
                 #}
                 <div class="header-actions">
-
-                    {# Selector de instancia monitoreada (perfiles de conexión).
-                       layout.js lo llena con GET /api/connections y, al
-                       cambiarlo, valida el perfil con PUT /api/connections/active
-                       antes de recargar la página. #}
-                    <label class="profile-selector">
-                        <span class="profile-selector-label">Instancia</span>
-                        <select id="connection-profile" class="select-input compact" disabled>
-                            <option>Cargando perfiles...</option>
-                        </select>
-                    </label>
 
                     <div class="update-info">
                         <span>Última actualización</span>
