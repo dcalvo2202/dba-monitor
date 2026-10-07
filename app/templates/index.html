@@ -1,0 +1,254 @@
+{#
+    Módulo 1 - Estado general de la instancia del SGBD.
+
+    Hereda la estructura común de base.html y define solo el contenido
+    propio del módulo: tarjetas de resumen, información de la instancia,
+    memoria (SGA/PGA) y PDBs visibles. Los datos se cargan desde
+    /api/instance mediante static/js/instance.js.
+#}
+{% extends "base.html" %}
+{% from "_icons.html" import icon %}
+
+{% block page_title %}Estado general · DBA Monitor{% endblock %}
+
+{% block eyebrow %}Módulo 1{% endblock %}
+
+{% block heading %}Estado general de la instancia{% endblock %}
+
+{% block description %}Información operativa de la instancia Oracle monitoreada.{% endblock %}
+
+{% block content %}
+            <section class="summary-grid">
+
+                <article class="summary-card">
+                    <span class="summary-icon">{{ icon("power") }}</span>
+                    <span class="summary-label">Estado</span>
+                    <strong id="instance-status" class="status-badge">—</strong>
+                    <span class="summary-secondary">Instancia Oracle</span>
+                </article>
+
+                <article class="summary-card">
+                    <span class="summary-icon">{{ icon("server") }}</span>
+                    <span class="summary-label">Instancia</span>
+                    <strong id="instance-name">—</strong>
+                    <span class="summary-secondary">Nombre de instancia</span>
+                </article>
+
+                <article class="summary-card">
+                    <span class="summary-icon">{{ icon("database") }}</span>
+                    <span class="summary-label">PDB monitoreada</span>
+                    <strong id="container-name">—</strong>
+                    <span class="summary-secondary">Contenedor actual</span>
+                </article>
+
+                <article class="summary-card">
+                    <span class="summary-icon">{{ icon("clock") }}</span>
+                    <span class="summary-label">Tiempo activa</span>
+                    <strong id="instance-uptime">—</strong>
+                    <span class="summary-secondary">Desde el último inicio</span>
+                </article>
+
+            </section>
+
+            <section class="content-grid">
+
+                <article class="panel">
+                    <div class="panel-header">
+                        <div>
+                            <h2>Información de la instancia</h2>
+                            <p>Identificación y estado del SGBD.</p>
+                        </div>
+                    </div>
+
+                    <dl class="details-list">
+                        <div>
+                            <dt>Servidor</dt>
+                            <dd id="host-name">—</dd>
+                        </div>
+
+                        <div>
+                            <dt>Gestor</dt>
+                            <dd id="dbms-name">—</dd>
+                        </div>
+
+                        <div>
+                            <dt>Base de datos</dt>
+                            <dd id="database-name">—</dd>
+                        </div>
+                        
+                        <div>
+                            <dt>Versión</dt>
+                            <dd id="db-version">—</dd>
+                        </div>
+
+                        <div>
+                            <dt>Servicio</dt>
+                            <dd id="service-name">—</dd>
+                        </div>
+
+                        <div>
+                            <dt>Inicio de instancia</dt>
+                            <dd id="startup-time">—</dd>
+                        </div>
+                    </dl>
+                </article>
+
+                <article class="panel">
+                    <div class="panel-header">
+                        <div>
+                            <h2>Memoria</h2>
+                            <p>Uso actual de SGA y PGA.</p>
+                        </div>
+                    </div>
+
+                    <div class="memory-summary">
+                        <div>
+                            <span>Asignada</span>
+                            <strong id="memory-allocated">— MB</strong>
+                        </div>
+
+                        <div>
+                            <span>Utilizada estimada</span>
+                            <strong id="memory-used">— MB</strong>
+                        </div>
+                    </div>
+                    
+                    <div class="memory-visuals">
+
+                        <div class="memory-utilization">
+                            <div class="utilization-header">
+                                <span>Utilización SGA</span>
+                                <strong id="sga-percent">—%</strong>
+                            </div>
+
+                            <div class="progress-track">
+                                <div
+                                    id="sga-progress"
+                                    class="progress-bar"
+                                    role="progressbar"
+                                    aria-label="Utilización SGA"
+                                    aria-valuemin="0"
+                                    aria-valuemax="100"
+                                    aria-valuenow="0"
+                                ></div>
+                            </div>
+                        </div>
+
+
+                        <div class="memory-utilization">
+                            <div class="utilization-header">
+                                <span>Utilización PGA</span>
+                                <strong id="pga-percent">—%</strong>
+                            </div>
+
+                            <div class="progress-track">
+                                <div
+                                    id="pga-progress"
+                                    class="progress-bar"
+                                    role="progressbar"
+                                    aria-label="Utilización PGA"
+                                    aria-valuemin="0"
+                                    aria-valuemax="100"
+                                    aria-valuenow="0"
+                                ></div>
+                            </div>
+                        </div>
+
+
+                        <div class="memory-utilization">
+                            <div class="utilization-header">
+                                <span>Utilización total estimada</span>
+                                <strong id="total-memory-percent">—%</strong>
+                            </div>
+
+                            <div class="progress-track">
+                                <div
+                                    id="total-memory-progress"
+                                    class="progress-bar"
+                                    role="progressbar"
+                                    aria-label="Utilización total estimada de memoria"
+                                    aria-valuemin="0"
+                                    aria-valuemax="100"
+                                    aria-valuenow="0"
+                                ></div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <div class="memory-breakdown">
+                        <div class="memory-row">
+                            <span>SGA asignada</span>
+                            <strong id="sga-allocated">— MB</strong>
+                        </div>
+
+                        <div class="memory-row">
+                            <span>SGA utilizada estimada</span>
+                            <strong id="sga-used">— MB</strong>
+                        </div>
+
+                        <div class="memory-row">
+                            <span>PGA asignada</span>
+                            <strong id="pga-allocated">— MB</strong>
+                        </div>
+
+                        <div class="memory-row">
+                            <span>PGA en uso</span>
+                            <strong id="pga-inuse">— MB</strong>
+                        </div>
+                    </div>
+                </article>
+
+            </section>
+
+            <!-- Composición de la SGA (V$SGA): gráfico de partes de un todo,
+                 dibujado por static/js/charts.js desde instance.js. -->
+            <section class="panel chart-panel">
+                <div class="panel-header">
+                    <div>
+                        <h2>Composición de la SGA</h2>
+                        <p>
+                            Cómo se reparte la memoria compartida de la instancia entre sus componentes.
+                        </p>
+                    </div>
+                </div>
+
+                <div id="sga-chart" class="chart-body">
+                    <p class="viz-empty">Cargando información...</p>
+                </div>
+            </section>
+
+            <section class="panel pdb-panel">
+                <div class="panel-header">
+                    <div>
+                        <h2>Pluggable Databases visibles</h2>
+                        <p>
+                            Contenedores disponibles desde la sesión administrativa configurada.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Nombre</th>
+                                <th>Modo de apertura</th>
+                                <th>Restringida</th>
+                            </tr>
+                        </thead>
+
+                        <tbody id="pdb-table-body">
+                            <tr>
+                                <td colspan="3">Cargando información...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+{% endblock %}
+
+{% block scripts %}
+    <script src="{{ url_for('static', path='js/charts.js') }}"></script>
+    <script src="{{ url_for('static', path='js/instance.js') }}"></script>
+{% endblock %}

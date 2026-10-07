@@ -1,0 +1,28 @@
+{
+    "_instrucciones": [
+        "Plantilla de perfiles de conexión. Copiar este archivo como config/connections.json (ese archivo NO se sube a Git) y ajustar los valores a la instalación local.",
+        "Las contraseñas NO van aquí: password_env es el nombre de la variable del archivo .env que contiene la contraseña de cada perfil.",
+        "El primer perfil de la lista es el que se usa al iniciar la aplicación.",
+        "El perfil cdb_root requiere crear el usuario común C##DBA_MONITOR con sql/oracle/connections/setup/create_cdb_monitor.sql y agregar DB_PASSWORD_CDB al .env."
+    ],
+    "profiles": [
+        {
+            "name": "xepdb1",
+            "label": "XEPDB1 · base de datos de la aplicación",
+            "host": "localhost",
+            "port": 1521,
+            "service": "XEPDB1",
+            "user": "DBA_MONITOR",
+            "password_env": "DB_PASSWORD"
+        },
+        {
+            "name": "cdb_root",
+            "label": "CDB$ROOT · contenedor raíz",
+            "host": "localhost",
+            "port": 1521,
+            "service": "XE",
+            "user": "C##DBA_MONITOR",
+            "password_env": "DB_PASSWORD_CDB"
+        }
+    ]
+}

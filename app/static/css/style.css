@@ -1,0 +1,1885 @@
+/* ==========================================================================
+   Tokens de diseño
+   Todos los colores de la interfaz se definen aquí como variables. Los
+   componentes nunca usan un color directo: así el tema claro y el oscuro
+   se cambian en un solo lugar.
+   ========================================================================== */
+
+:root {
+    color-scheme: light;
+
+    /* Tipografía: Fira Sans para texto y Fira Code para datos técnicos
+       (nombres de objetos, versiones, valores). Si las fuentes de Google
+       no cargan (sin internet), se usan las del sistema. */
+    --font-body: "Fira Sans", "Segoe UI", Arial, sans-serif;
+    --font-mono: "Fira Code", Consolas, "Courier New", monospace;
+
+    /* Superficies */
+    --bg-page: #f4f6f8;
+    --bg-surface: #ffffff;
+    --bg-subtle: #fafbfc;
+    --bg-hover: #f0f2f4;
+    --bg-sidebar: #18212b;
+
+    /* Texto */
+    --text-primary: #1d2733;
+    --text-secondary: #5b6775;
+    --text-sidebar: #d9e0e7;
+    --link: #2f5d7c;
+
+    /* Bordes y líneas */
+    --border: #dfe4e8;
+    --border-subtle: #edf0f2;
+    --track: #e7ebee;
+
+    /* Acento e interacción: azul de marca, el mismo tono que la serie
+       principal de los gráficos (--viz-1), para que todo se lea unificado. */
+    --accent: #2a78d6;
+    --accent-strong: #256abf;   /* fondo del botón principal (5,4:1 con blanco) */
+    --accent-soft: #e8f1fc;     /* fondos suaves de acento */
+    --on-accent: #ffffff;
+    --accent-on-dark: #6da7ec;  /* acento sobre la barra lateral oscura */
+    --focus-ring: #2a78d6;
+
+    /* Movimiento: curva de salida fuerte (rápida al inicio, suave al final). */
+    --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+
+    /* Barra lateral (oscura en ambos temas) */
+    --sidebar-text-strong: #ffffff;
+    --sidebar-text-muted: #9aa8b6;
+    --sidebar-link: #c3ccd5;
+    --sidebar-hover: rgba(255, 255, 255, 0.06);
+    --sidebar-active: rgba(255, 255, 255, 0.1);
+    --sidebar-divider: rgba(255, 255, 255, 0.08);
+    --sidebar-mark-border: rgba(255, 255, 255, 0.28);
+
+    /* Estados: cada uno con texto, fondo y borde. El color nunca es la única
+       señal: los badges siempre incluyen texto (OPEN, ALTO, etc.). */
+    --success: #218653;
+    --success-soft: #e8f5ed;
+    --ok-text: #17683e;
+    --ok-bg: #e8f5ed;
+    --ok-border: #cbe8d7;
+    --warn-text: #7a5410;
+    --warn-bg: #fff7df;
+    --warn-border: #eadba8;
+    --error-text: #a03333;
+    --error-bg: #fbecec;
+    --error-border: #eccaca;
+    --neutral-text: #596675;
+    --neutral-bg: #eef1f4;
+    --neutral-border: #d9dfe4;
+
+    --sidebar-width: 240px;
+}
+
+/*
+   IMPORTANTE: los tokens del tema oscuro están repetidos en DOS bloques
+   (el de prefers-color-scheme y el de [data-theme="dark"]). CSS no permite
+   compartir una lista de reglas entre ambos selectores, así que al cambiar
+   un color oscuro hay que editarlo en los dos bloques.
+
+   Tema oscuro. Se aplica:
+   - automáticamente si el sistema operativo usa modo oscuro, salvo que el
+     usuario haya elegido "claro" con el botón de tema;
+   - siempre que el usuario elija "oscuro" con el botón de tema.
+   Los valores cumplen contraste mínimo 4.5:1 para texto.
+*/
+@media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+        color-scheme: dark;
+
+        --bg-page: #0f1620;
+        --bg-surface: #172130;
+        --bg-subtle: #1b2636;
+        --bg-hover: #213044;
+        --bg-sidebar: #0b1118;
+
+        --text-primary: #e6ecf2;
+        --text-secondary: #9fb0c1;
+        --link: #8cc4ef;
+
+        --border: #2a3a4f;
+        --border-subtle: #223146;
+        --track: #263547;
+
+        --accent: #3987e5;
+        --accent-strong: #256abf;   /* 5,4:1 con blanco */
+        --accent-soft: #16304f;
+        --focus-ring: #8cc4ef;
+
+        --success: #3fbf7f;
+        --success-soft: #133524;
+        --ok-text: #6fdba3;
+        --ok-bg: #123324;
+        --ok-border: #1f5a3d;
+        --warn-text: #f1c86b;
+        --warn-bg: #3a2d10;
+        --warn-border: #6b5418;
+        --error-text: #f39a9a;
+        --error-bg: #3d1a1d;
+        --error-border: #6e2c31;
+        --neutral-text: #b4c1ce;
+        --neutral-bg: #223045;
+        --neutral-border: #34465d;
+    }
+}
+
+:root[data-theme="dark"] {
+    color-scheme: dark;
+
+    --bg-page: #0f1620;
+    --bg-surface: #172130;
+    --bg-subtle: #1b2636;
+    --bg-hover: #213044;
+    --bg-sidebar: #0b1118;
+
+    --text-primary: #e6ecf2;
+    --text-secondary: #9fb0c1;
+    --link: #8cc4ef;
+
+    --border: #2a3a4f;
+    --border-subtle: #223146;
+    --track: #263547;
+
+    --accent: #3987e5;
+    --accent-strong: #256abf;
+    --accent-soft: #16304f;
+    --focus-ring: #8cc4ef;
+
+    --success: #3fbf7f;
+    --success-soft: #133524;
+    --ok-text: #6fdba3;
+    --ok-bg: #123324;
+    --ok-border: #1f5a3d;
+    --warn-text: #f1c86b;
+    --warn-bg: #3a2d10;
+    --warn-border: #6b5418;
+    --error-text: #f39a9a;
+    --error-bg: #3d1a1d;
+    --error-border: #6e2c31;
+    --neutral-text: #b4c1ce;
+    --neutral-bg: #223045;
+    --neutral-border: #34465d;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+/*
+   El atributo HTML `hidden` debe ocultar SIEMPRE. Sin esta regla, cualquier
+   clase que defina `display` (por ejemplo, `display: flex`) le gana al
+   atributo y el elemento sigue visible aunque el código lo haya ocultado.
+   (Esto hacía que el tooltip de los gráficos no desapareciera.)
+*/
+[hidden] {
+    display: none !important;
+}
+
+body {
+    margin: 0;
+    font-family: var(--font-body);
+    line-height: 1.5;
+    background: var(--bg-page);
+    color: var(--text-primary);
+}
+
+.app-layout {
+    display: grid;
+    grid-template-columns: var(--sidebar-width) 1fr;
+    min-height: 100vh;
+}
+
+
+/* Sidebar */
+
+.sidebar {
+    position: fixed;
+    width: var(--sidebar-width);
+    height: 100vh;
+    padding: 24px 18px;
+    background: var(--bg-sidebar);
+    color: var(--text-sidebar);
+
+    display: flex;
+    flex-direction: column;
+}
+
+.brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 0 8px 26px;
+    border-bottom: 1px solid var(--sidebar-divider);
+}
+
+.brand-mark {
+    width: 38px;
+    height: 38px;
+
+    display: grid;
+    place-items: center;
+
+    border: 1px solid var(--sidebar-mark-border);
+    border-radius: 7px;
+
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.brand div {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.brand strong {
+    font-size: 15px;
+    color: var(--sidebar-text-strong);
+}
+
+.brand span {
+    font-size: 12px;
+    color: var(--sidebar-text-muted);
+}
+
+.navigation {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    margin-top: 24px;
+}
+
+.nav-item {
+    padding: 10px 12px;
+
+    color: var(--sidebar-link);
+    text-decoration: none;
+
+    font-size: 14px;
+
+    border-radius: 5px;
+}
+
+.nav-item:hover {
+    background: var(--sidebar-hover);
+    color: var(--sidebar-text-strong);
+}
+
+.nav-item.active {
+    background: var(--sidebar-active);
+    color: var(--sidebar-text-strong);
+    font-weight: 600;
+}
+
+.nav-item.disabled {
+    opacity: 0.45;
+    pointer-events: none;
+}
+
+.sidebar-footer {
+    margin-top: auto;
+    padding: 18px 8px 0;
+
+    border-top: 1px solid var(--sidebar-divider);
+
+    color: var(--sidebar-text-muted);
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+
+/* Main */
+
+.main-content {
+    grid-column: 2;
+    padding: 38px 42px 60px;
+
+    width: 100%;
+    max-width: 1500px;
+}
+
+.page-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 30px;
+
+    margin-bottom: 30px;
+}
+
+.eyebrow {
+    margin: 0 0 6px;
+
+    color: var(--text-secondary);
+
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.page-header h1 {
+    margin: 0;
+    font-size: 27px;
+    font-weight: 650;
+}
+
+.page-description {
+    margin: 8px 0 0;
+
+    color: var(--text-secondary);
+    font-size: 14px;
+}
+
+.connection-state {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    padding: 8px 11px;
+
+    background: var(--success-soft);
+    border: 1px solid var(--ok-border);
+    border-radius: 5px;
+
+    color: var(--ok-text);
+
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.status-dot {
+    width: 8px;
+    height: 8px;
+
+    background: var(--success);
+    border-radius: 50%;
+}
+
+
+/* Summary */
+
+.summary-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 16px;
+
+    margin-bottom: 20px;
+}
+
+.summary-card {
+    padding: 20px;
+
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: 7px;
+}
+
+.summary-label {
+    display: block;
+
+    margin-bottom: 10px;
+
+    color: var(--text-secondary);
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.summary-card strong {
+    display: block;
+
+    font-size: 22px;
+    font-weight: 650;
+}
+
+.summary-secondary {
+    display: block;
+
+    margin-top: 7px;
+
+    color: var(--text-secondary);
+    font-size: 12px;
+}
+
+/* Operational states */
+
+.status-badge,
+.table-status {
+    display: inline-flex;
+    align-items: center;
+
+    width: fit-content;
+
+    padding: 4px 8px;
+
+    border: 1px solid transparent;
+    border-radius: 4px;
+
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.summary-card .status-badge {
+    display: inline-flex;
+    font-size: 13px;
+}
+
+.state-ok {
+    color: var(--ok-text);
+    background: var(--ok-bg);
+    border-color: var(--ok-border);
+}
+
+.state-warning {
+    color: var(--warn-text);
+    background: var(--warn-bg);
+    border-color: var(--warn-border);
+}
+
+.state-error {
+    color: var(--error-text);
+    background: var(--error-bg);
+    border-color: var(--error-border);
+}
+
+.state-neutral {
+    color: var(--neutral-text);
+    background: var(--neutral-bg);
+    border-color: var(--neutral-border);
+}
+
+
+/* Connection indicator */
+
+.connection-state.is-ok {
+    color: var(--ok-text);
+    background: var(--ok-bg);
+    border-color: var(--ok-border);
+}
+
+.connection-state.is-warning {
+    color: var(--warn-text);
+    background: var(--warn-bg);
+    border-color: var(--warn-border);
+}
+
+.connection-state.is-error {
+    color: var(--error-text);
+    background: var(--error-bg);
+    border-color: var(--error-border);
+}
+
+.connection-state.is-loading {
+    color: var(--neutral-text);
+    background: var(--neutral-bg);
+    border-color: var(--neutral-border);
+}
+
+.connection-state .status-dot {
+    background: currentColor;
+}
+
+/* Panels */
+
+.content-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+
+    margin-bottom: 20px;
+}
+
+.panel {
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: 7px;
+}
+
+.panel-header {
+    padding: 20px 22px 17px;
+
+    border-bottom: 1px solid var(--border);
+}
+
+.panel-header h2 {
+    margin: 0;
+
+    font-size: 16px;
+    font-weight: 650;
+}
+
+.panel-header p {
+    margin: 5px 0 0;
+
+    color: var(--text-secondary);
+    font-size: 12px;
+}
+
+
+/* Details */
+
+.details-list {
+    margin: 0;
+    padding: 5px 22px 10px;
+}
+
+.details-list div {
+    display: flex;
+    justify-content: space-between;
+    gap: 25px;
+
+    padding: 13px 0;
+
+    border-bottom: 1px solid var(--border-subtle);
+}
+
+.details-list div:last-child {
+    border-bottom: none;
+}
+
+.details-list dt {
+    color: var(--text-secondary);
+    font-size: 13px;
+}
+
+.details-list dd {
+    margin: 0;
+
+    font-size: 13px;
+    font-weight: 600;
+    text-align: right;
+}
+
+
+/* Memory */
+
+.memory-summary {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+
+    border-bottom: 1px solid var(--border);
+}
+
+.memory-summary div {
+    padding: 20px 22px;
+}
+
+.memory-summary div + div {
+    border-left: 1px solid var(--border);
+}
+
+.memory-summary span {
+    display: block;
+
+    color: var(--text-secondary);
+    font-size: 12px;
+}
+
+.memory-summary strong {
+    display: block;
+
+    margin-top: 7px;
+
+    font-size: 21px;
+}
+
+.memory-breakdown {
+    padding: 8px 22px 12px;
+}
+
+.memory-row {
+    display: flex;
+    justify-content: space-between;
+
+    padding: 10px 0;
+
+    font-size: 13px;
+}
+
+.memory-row span {
+    color: var(--text-secondary);
+}
+
+
+/* Table */
+
+.pdb-panel {
+    margin-bottom: 20px;
+}
+
+.table-wrapper {
+    overflow-x: auto;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th,
+td {
+    padding: 13px 22px;
+
+    border-bottom: 1px solid var(--border-subtle);
+
+    font-size: 13px;
+    text-align: left;
+}
+
+th {
+    color: var(--text-secondary);
+
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+tbody tr:last-child td {
+    border-bottom: none;
+}
+
+
+/* Responsive */
+
+@media (max-width: 1000px) {
+    .summary-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .content-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 700px) {
+    .app-layout {
+        display: block;
+    }
+
+    .sidebar {
+        position: static;
+        width: 100%;
+        height: auto;
+    }
+
+    .navigation {
+        display: none;
+    }
+
+    .sidebar-footer {
+        display: none;
+    }
+
+    .main-content {
+        padding: 24px 18px;
+    }
+
+    .page-header {
+        flex-direction: column;
+    }
+
+    .summary-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .header-actions {
+        width: 100%;
+        flex-wrap: wrap;
+    }
+
+    .update-info {
+        align-items: flex-start;
+    }
+}
+
+/* Memory utilization */
+
+.memory-visuals {
+    padding: 20px 22px;
+
+    border-bottom: 1px solid var(--border);
+}
+
+.memory-utilization + .memory-utilization {
+    margin-top: 18px;
+}
+
+.utilization-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    margin-bottom: 8px;
+
+    font-size: 12px;
+}
+
+.utilization-header span {
+    color: var(--text-secondary);
+}
+
+.utilization-header strong {
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.progress-track {
+    width: 100%;
+    height: 7px;
+
+    overflow: hidden;
+
+    background: var(--track);
+    border-radius: 3px;
+}
+
+.progress-bar {
+    width: 0;
+    height: 100%;
+
+    background: var(--accent);
+    border-radius: 3px;
+
+    transition: width 0.35s ease;
+}
+
+/* Header actions */
+
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.update-info {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 2px;
+}
+
+.update-info span {
+    color: var(--text-secondary);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.update-info strong {
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.refresh-button {
+    padding: 8px 12px;
+
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+
+    color: var(--text-primary);
+
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 600;
+
+    cursor: pointer;
+}
+
+.refresh-button:hover:not(:disabled):not([aria-disabled="true"]) {
+    background: var(--bg-hover);
+}
+
+.refresh-button[aria-disabled="true"],
+.refresh-button:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
+
+/* ==========================================================================
+   Componentes de módulos con pestañas y tablas filtrables
+   (usados por el Módulo 5 - Auditoría; reutilizables por otros módulos).
+   Se apoyan en las variables de color definidas en :root.
+   ========================================================================== */
+
+/*
+   Un elemento de grid toma por defecto como ancho mínimo el de su contenido
+   más ancho. Con tablas de muchas columnas eso ensanchaba toda la página;
+   min-width: 0 permite que .table-wrapper aplique su scroll horizontal.
+*/
+.main-content {
+    min-width: 0;
+}
+
+/* Pestañas */
+
+.tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+
+    margin-bottom: 16px;
+}
+
+.tab-button {
+    padding: 9px 14px;
+
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+
+    color: var(--text-secondary);
+
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 600;
+
+    cursor: pointer;
+}
+
+.tab-button:hover {
+    color: var(--text-primary);
+    background: var(--bg-hover);
+}
+
+.tab-button.is-active {
+    color: var(--sidebar-text-strong);
+    background: var(--bg-sidebar);
+    border-color: var(--bg-sidebar);
+}
+
+.tab-panel {
+    margin-bottom: 20px;
+}
+
+/* Barra de herramientas: buscador, filtros y acciones sobre una tabla */
+
+.toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+
+    padding: 14px 22px;
+
+    border-bottom: 1px solid var(--border);
+}
+
+.search-input,
+.select-input {
+    min-width: 240px;
+    padding: 8px 11px;
+
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+
+    color: var(--text-primary);
+
+    font-family: inherit;
+    font-size: 13px;
+}
+
+.select-input {
+    min-width: 170px;
+}
+
+.search-input:focus,
+.select-input:focus,
+.tab-button:focus-visible,
+.link-button:focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 1px;
+}
+
+.checkbox-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+
+    color: var(--text-secondary);
+    font-size: 13px;
+
+    cursor: pointer;
+}
+
+.toolbar-note {
+    color: var(--text-secondary);
+    font-size: 12px;
+}
+
+/* Contenido de celdas */
+
+.cell-strong {
+    font-weight: 600;
+}
+
+/* Etiqueta que acompaña a un nombre dentro de la misma celda. */
+.cell-strong .table-status,
+td > .table-status + .table-status {
+    margin-left: 6px;
+}
+
+.cell-note {
+    color: var(--text-secondary);
+    font-size: 12px;
+    line-height: 1.45;
+}
+
+.risk-list {
+    /* Ancho mínimo para que cada hallazgo se lea en pocas líneas. */
+    min-width: 280px;
+
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+
+    margin: 0;
+    padding: 0;
+
+    list-style: none;
+}
+
+.risk-list li {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+
+    color: var(--text-secondary);
+    font-size: 12px;
+    line-height: 1.45;
+}
+
+.risk-list .table-status {
+    flex-shrink: 0;
+}
+
+.link-button {
+    padding: 0;
+
+    background: none;
+    border: none;
+
+    color: var(--link);
+
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    white-space: nowrap;
+
+    cursor: pointer;
+}
+
+.link-button:hover {
+    text-decoration: underline;
+}
+
+/* Errores de compilación desplegables */
+
+details summary {
+    color: var(--error-text);
+    font-weight: 600;
+    cursor: pointer;
+}
+
+/* Fila de detalle que aparece debajo de un objeto con errores. */
+.detail-row td {
+    padding-top: 0;
+    background: var(--bg-subtle);
+}
+
+.error-list {
+    margin: 8px 0 0;
+    padding-left: 18px;
+
+    /* Respeta los saltos de línea originales de los mensajes de Oracle. */
+    white-space: pre-wrap;
+
+    color: var(--text-secondary);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+/* Resultado de la consulta de privilegios */
+
+.inline-summary {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+
+    padding: 16px 22px;
+
+    border-bottom: 1px solid var(--border);
+}
+
+.summary-chip {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+
+    min-width: 120px;
+    padding: 9px 12px;
+
+    background: var(--bg-page);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+}
+
+.summary-chip span {
+    color: var(--text-secondary);
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.summary-chip strong {
+    font-size: 15px;
+}
+
+.table-title {
+    margin: 0;
+    padding: 18px 22px 6px;
+
+    font-size: 14px;
+    font-weight: 650;
+}
+
+/* Mensajes */
+
+.notice {
+    margin: 6px 22px 0;
+    padding: 9px 12px;
+
+    color: var(--warn-text);
+    background: var(--warn-bg);
+    border: 1px solid var(--warn-border);
+    border-radius: 5px;
+
+    font-size: 12px;
+}
+
+.panel-message,
+.table-message {
+    color: var(--text-secondary);
+    font-size: 13px;
+}
+
+.panel-message {
+    margin: 0;
+    padding: 18px 22px;
+}
+
+@media (max-width: 700px) {
+    .search-input,
+    .select-input {
+        min-width: 0;
+        width: 100%;
+    }
+}
+
+
+/* ==========================================================================
+   Mejoras de experiencia de usuario (aplican a todos los módulos)
+   Basadas en la revisión con la guía ui-ux-pro-max: accesibilidad,
+   navegación por teclado, áreas táctiles, tema oscuro y movimiento reducido.
+   ========================================================================== */
+
+/* Profundidad sutil en las superficies (más marcada en tema oscuro). */
+.summary-card,
+.panel {
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05);
+}
+
+/* Datos técnicos (nombres de objetos, versiones, servicios) en fuente
+   monoespaciada; números con ancho fijo para que las cifras se alineen. */
+.cell-strong,
+.details-list dd,
+.summary-chip strong {
+    font-family: var(--font-mono);
+    font-size: 13px;
+}
+
+.summary-card strong,
+td,
+.memory-row strong,
+.update-info strong {
+    font-variant-numeric: tabular-nums;
+}
+
+/* Foco visible y consistente para TODO elemento interactivo al usar
+   teclado (:focus-visible no lo muestra al hacer clic con el mouse). */
+a:focus-visible,
+button:focus-visible,
+select:focus-visible,
+input:focus-visible,
+summary:focus-visible,
+.table-wrapper:focus-visible,
+.tab-panel:focus-visible,
+.main-content:focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 2px;
+}
+
+.nav-item:focus-visible {
+    outline-color: var(--sidebar-text-strong);
+}
+
+/* Enlace "Saltar al contenido": invisible hasta recibir foco con Tab. */
+.skip-link {
+    position: absolute;
+    top: -100px;
+    left: 12px;
+    z-index: 100;
+
+    padding: 10px 14px;
+
+    background: var(--bg-surface);
+    border: 2px solid var(--focus-ring);
+    border-radius: 5px;
+
+    color: var(--text-primary);
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.skip-link:focus {
+    top: 12px;
+}
+
+/* Texto solo para lectores de pantalla. */
+.visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+/* Los textos ocultos (position: absolute) dentro de una tabla se ubican
+   respecto al contenedor; así quedan dentro de su recorte y no ensanchan
+   la página fuera del scroll horizontal de la tabla. */
+.table-wrapper {
+    position: relative;
+}
+
+/* Menú lateral con íconos */
+.nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.nav-icon {
+    flex-shrink: 0;
+    width: 18px;
+    height: 18px;
+}
+
+/* Transiciones suaves (150-200 ms) en controles interactivos. */
+.refresh-button,
+.tab-button,
+.icon-button,
+.link-button,
+.select-input,
+.search-input {
+    transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+/* Filas de tabla resaltadas al pasar el cursor para seguir la lectura. */
+tbody tr:not(.detail-row):hover td {
+    background: var(--bg-hover);
+}
+
+/* Botón de tema (solo ícono, con etiqueta accesible en el HTML). */
+.icon-button {
+    display: inline-grid;
+    place-items: center;
+
+    width: 36px;
+    height: 36px;
+    padding: 0;
+
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+
+    color: var(--text-primary);
+    cursor: pointer;
+}
+
+.icon-button:hover {
+    background: var(--bg-hover);
+}
+
+.icon-button svg {
+    width: 18px;
+    height: 18px;
+}
+
+/* Muestra la luna en tema claro y el sol en tema oscuro. */
+.icon-sun {
+    display: none;
+}
+
+:root[data-theme="dark"] .icon-sun {
+    display: block;
+}
+
+:root[data-theme="dark"] .icon-moon {
+    display: none;
+}
+
+@media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) .icon-sun {
+        display: block;
+    }
+
+    :root:not([data-theme="light"]) .icon-moon {
+        display: none;
+    }
+}
+
+/* Selector compacto del encabezado (actualización automática). */
+.select-input.compact {
+    min-width: 0;
+    padding: 7px 9px;
+    cursor: pointer;
+}
+
+.refresh-button,
+.tab-button,
+.link-button,
+.checkbox-label,
+select {
+    cursor: pointer;
+}
+
+.checkbox-label input {
+    width: 16px;
+    height: 16px;
+    accent-color: var(--accent);
+}
+
+/* Tema oscuro: ajustes que no se resuelven solo con tokens. */
+:root[data-theme="dark"] .summary-card,
+:root[data-theme="dark"] .panel {
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+}
+
+@media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) .summary-card,
+    :root:not([data-theme="light"]) .panel {
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+    }
+}
+
+/* Pantallas táctiles: áreas de toque de al menos 44 px. */
+@media (pointer: coarse) {
+    .refresh-button,
+    .tab-button,
+    .icon-button,
+    .select-input,
+    .search-input,
+    .nav-item {
+        min-height: 44px;
+    }
+
+    .icon-button {
+        width: 44px;
+    }
+
+    .link-button {
+        display: inline-flex;
+        align-items: center;
+        min-height: 44px;
+    }
+
+    .checkbox-label {
+        min-height: 44px;
+    }
+
+    .checkbox-label input {
+        width: 20px;
+        height: 20px;
+    }
+}
+
+/* Móvil: el menú lateral se convierte en una barra horizontal desplazable
+   (antes se ocultaba y no había forma de cambiar de módulo). */
+@media (max-width: 700px) {
+    .navigation {
+        display: flex;
+        flex-direction: row;
+        gap: 6px;
+
+        margin-top: 14px;
+        padding-bottom: 4px;
+
+        overflow-x: auto;
+        scrollbar-width: thin;
+    }
+
+    .nav-item {
+        flex-shrink: 0;
+        white-space: nowrap;
+    }
+
+    .brand {
+        padding-bottom: 14px;
+    }
+}
+
+/* Encabezado adaptable: si el título y las acciones no caben en una
+   línea, las acciones pasan debajo en lugar de comprimir el título. */
+.page-header {
+    flex-wrap: wrap;
+    row-gap: 16px;
+}
+
+.page-header > div:first-child {
+    flex: 1 1 320px;
+}
+
+.header-actions {
+    flex-wrap: wrap;
+}
+
+/* Tarjetas de resumen: 4 columnas en pantallas anchas y 2 x 2 en
+   medianas, para que no se compriman ni quede una tarjeta sola. */
+@media (min-width: 701px) and (max-width: 1180px) {
+    .summary-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 700px) {
+    /* En columna, flex-basis se aplicaría a la altura: se anula. */
+    .page-header > div:first-child {
+        flex-basis: auto;
+    }
+}
+
+.summary-card strong {
+    overflow-wrap: anywhere;
+}
+
+/* Barra lateral fija: si la ventana es muy baja (teléfono horizontal o
+   zoom alto), permite desplazarla para alcanzar todos los módulos. */
+.sidebar {
+    overflow-y: auto;
+}
+
+/* Selector de instancia monitoreada (perfiles de conexión). */
+.profile-selector {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.profile-selector-label {
+    color: var(--text-secondary);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.profile-selector .select-input {
+    max-width: 260px;
+}
+
+/* Aviso cuando no se puede activar un perfil: ocupa todo el ancho, bajo
+   el encabezado y antes del contenido del módulo. */
+.profile-message {
+    margin: -14px 0 20px;
+}
+
+/* ==========================================================================
+   Gráficos (static/js/charts.js)
+   Paleta categórica validada para daltonismo en ambos temas (guía dataviz).
+   El tema oscuro usa los mismos tonos ajustados a la superficie oscura.
+   ========================================================================== */
+:root {
+    --viz-1: #2a78d6;
+    --viz-2: #eb6834;
+    --viz-3: #1baf7a;
+    --viz-4: #eda100;
+}
+
+:root[data-theme="dark"] {
+    --viz-1: #3987e5;
+    --viz-2: #d95926;
+    --viz-3: #199e70;
+    --viz-4: #c98500;
+}
+
+@media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+        --viz-1: #3987e5;
+        --viz-2: #d95926;
+        --viz-3: #199e70;
+        --viz-4: #c98500;
+    }
+}
+
+.viz-empty {
+    margin: 0;
+    color: var(--text-secondary);
+    font-size: 13px;
+}
+
+/* Paneles que contienen un gráfico */
+.chart-panel {
+    margin-bottom: 20px;
+}
+
+.chart-body {
+    padding: 20px 22px;
+}
+
+/* Fila de dos gráficos lado a lado (una columna en pantallas pequeñas). */
+.chart-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+.chart-grid .chart-panel {
+    margin-bottom: 0;
+}
+
+@media (max-width: 1000px) {
+    .chart-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Barras horizontales */
+.viz-bars {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.viz-bar-row {
+    display: grid;
+    grid-template-columns: minmax(80px, 34%) 1fr auto;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+}
+
+.viz-bar-label {
+    overflow: hidden;
+    color: var(--text-primary);
+    font-family: var(--font-mono);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.viz-bar-track {
+    display: block;
+    height: 14px;
+}
+
+/* Base recta a la izquierda, extremo redondeado de 4 px. Crece con
+   transform (escala horizontal), animado solo en la primera carga. */
+.viz-bar {
+    display: block;
+    width: 100%;
+    height: 100%;
+    background: var(--viz-1);
+    border-radius: 0 4px 4px 0;
+    transform: scaleX(0);
+    transform-origin: left center;
+    transition: transform 300ms var(--ease-out);
+    cursor: default;
+}
+
+.viz-ready .viz-bar {
+    transform: scaleX(var(--viz-scale, 1));
+}
+
+.viz-bar:hover,
+.viz-bar:focus-visible,
+.viz-stack-segment:hover,
+.viz-stack-segment:focus-visible {
+    filter: brightness(1.12);
+}
+
+.viz-bar-value {
+    color: var(--text-secondary);
+    font-variant-numeric: tabular-nums;
+    font-weight: 600;
+}
+
+/* Barra apilada: 2 px de separación (gap) entre segmentos. */
+.viz-stack {
+    display: flex;
+    gap: 2px;
+    height: 18px;
+    overflow: hidden;
+    border-radius: 4px;
+    opacity: 0;
+    transition: opacity 250ms var(--ease-out);
+}
+
+.viz-ready .viz-stack {
+    opacity: 1;
+}
+
+.viz-stack-segment {
+    flex-basis: 0;
+    min-width: 3px;
+}
+
+.viz-legend {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin: 14px 0 0;
+    padding: 0;
+    list-style: none;
+    font-size: 13px;
+}
+
+.viz-legend-item {
+    display: grid;
+    grid-template-columns: 12px 1fr auto auto;
+    align-items: center;
+    gap: 10px;
+}
+
+.viz-swatch {
+    width: 12px;
+    height: 12px;
+    border-radius: 3px;
+}
+
+.viz-legend-label {
+    color: var(--text-primary);
+}
+
+.viz-legend-value {
+    color: var(--text-primary);
+    font-variant-numeric: tabular-nums;
+    font-weight: 600;
+}
+
+.viz-legend-percent {
+    min-width: 56px;
+    color: var(--text-secondary);
+    font-variant-numeric: tabular-nums;
+    text-align: right;
+}
+
+/* Tooltip: valor destacado primero, etiqueta después. */
+.viz-tooltip {
+    position: absolute;
+    z-index: 200;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    max-width: 260px;
+    padding: 8px 10px;
+    background: var(--bg-sidebar);
+    border-radius: 5px;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2);
+    color: var(--sidebar-text-strong);
+    font-size: 12px;
+    pointer-events: none;
+}
+
+.viz-tooltip-value {
+    font-size: 14px;
+    font-variant-numeric: tabular-nums;
+}
+
+.viz-tooltip-label {
+    color: var(--sidebar-link);
+}
+
+/* ==========================================================================
+   Color de marca y movimiento
+   ========================================================================== */
+
+/* Botón principal (Actualizar): relleno de acento, la acción más usada. */
+.refresh-button {
+    background: var(--accent-strong);
+    border-color: var(--accent-strong);
+    color: var(--on-accent);
+}
+
+.refresh-button:hover:not(:disabled):not([aria-disabled="true"]) {
+    background: var(--accent-strong);
+    filter: brightness(1.08);
+}
+
+/* Módulo activo del menú: barra de acento a la izquierda además del fondo,
+   para que la ubicación no dependa solo de un cambio de tono. */
+.nav-item.active {
+    box-shadow: inset 3px 0 0 var(--accent-on-dark);
+}
+
+.nav-item.active .nav-icon {
+    color: var(--accent-on-dark);
+}
+
+/* Pestaña activa con el color de marca. */
+.tab-button.is-active {
+    color: var(--on-accent);
+    background: var(--accent-strong);
+    border-color: var(--accent-strong);
+}
+
+/* Marca del logo con el acento. (.brand .brand-mark: más específico que
+   la regla .brand span, que si no le pondría el gris de los subtítulos.) */
+.brand .brand-mark {
+    background: var(--accent-strong);
+    border-color: transparent;
+    color: var(--on-accent);
+}
+
+/* --- Pulsación de botones: confirma el clic (120 ms, sin rebote). --- */
+.refresh-button,
+.tab-button,
+.icon-button {
+    transition-property: background-color, border-color, color, filter, transform;
+    transition-duration: 120ms;
+    transition-timing-function: var(--ease-out);
+}
+
+.refresh-button:active:not([aria-disabled="true"]),
+.tab-button:active,
+.icon-button:active {
+    transform: scale(0.97);
+}
+
+/* --- Entrada de la página: las secciones aparecen escalonadas (40 ms)
+   con un fundido y un desplazamiento corto. Solo ocurre al cargar: la
+   actualización automática no vuelve a animarlas porque no se recrean. --- */
+@keyframes enter-up {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+.page-header,
+.summary-card,
+.content-grid > .panel,
+.chart-grid > .panel,
+.main-content > .chart-panel,
+.main-content > .pdb-panel,
+.tabs {
+    animation: enter-up 280ms var(--ease-out) both;
+}
+
+.summary-card:nth-child(2) { animation-delay: 40ms; }
+.summary-card:nth-child(3) { animation-delay: 80ms; }
+.summary-card:nth-child(4) { animation-delay: 120ms; }
+.content-grid > .panel,
+.chart-grid > .panel { animation-delay: 160ms; }
+.content-grid > .panel:nth-child(2),
+.chart-grid > .panel:nth-child(2) { animation-delay: 200ms; }
+.main-content > .chart-panel,
+.tabs { animation-delay: 240ms; }
+.main-content > .pdb-panel { animation-delay: 280ms; }
+
+/* --- Recarga de datos: las tablas y gráficos se atenúan mientras cargan.
+   El retraso de 150 ms evita un parpadeo en recargas rápidas; al terminar
+   vuelven sin retraso. --- */
+.tab-panel .table-wrapper,
+.tab-panel .chart-body {
+    transition: opacity 200ms ease;
+}
+
+.tab-panel[aria-busy="true"] .table-wrapper,
+.tab-panel[aria-busy="true"] .chart-body {
+    opacity: 0.55;
+    transition-delay: 150ms;
+}
+
+/* ==========================================================================
+   Estilo moderno: superficies con más profundidad, íconos en las tarjetas,
+   pestañas segmentadas y etiquetas tipo píldora. Todo con los tokens de
+   color, por lo que funciona igual en tema claro y oscuro.
+   ========================================================================== */
+
+/* Fondo con un leve resplandor del color de marca en la parte superior. */
+body {
+    background:
+        radial-gradient(1100px 420px at 85% -12%, var(--accent-soft), transparent 70%),
+        var(--bg-page);
+    background-attachment: fixed;
+}
+
+/* Barra lateral con degradado vertical sutil. */
+.sidebar {
+    background: linear-gradient(180deg, var(--bg-sidebar) 0%, #10171f 100%);
+}
+
+.brand .brand-mark {
+    background: linear-gradient(135deg, var(--accent) 0%, var(--accent-strong) 100%);
+    border-radius: 9px;
+    box-shadow: 0 4px 12px rgba(42, 120, 214, 0.35);
+}
+
+/* Encabezado: título más grande y con mejor corte de línea. */
+.page-header h1 {
+    font-size: 30px;
+    letter-spacing: -0.02em;
+    text-wrap: balance;
+}
+
+.page-description,
+.panel-header p {
+    text-wrap: pretty;
+}
+
+/* Superficies: radio mayor y sombra en dos capas (contacto + ambiente). */
+.summary-card,
+.panel {
+    border-radius: 12px;
+    box-shadow:
+        0 1px 2px rgba(15, 23, 42, 0.04),
+        0 6px 16px rgba(15, 23, 42, 0.05);
+}
+
+/* Tarjetas de resumen: ícono en un recuadro de acento, cifras grandes y
+   una línea superior de color de marca. */
+.summary-card {
+    position: relative;
+    overflow: hidden;
+    padding: 20px 20px 18px;
+}
+
+.summary-card::before {
+    content: "";
+    position: absolute;
+    inset: 0 0 auto;
+    height: 3px;
+    background: linear-gradient(90deg, var(--accent), transparent);
+}
+
+.summary-icon {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+
+    display: grid;
+    place-items: center;
+
+    width: 38px;
+    height: 38px;
+
+    background: var(--accent-soft);
+    border-radius: 10px;
+
+    color: var(--accent);
+}
+
+.summary-icon .icon {
+    width: 20px;
+    height: 20px;
+}
+
+.summary-label {
+    padding-right: 48px;
+}
+
+.summary-card strong:not(.status-badge) {
+    font-size: 28px;
+    letter-spacing: -0.02em;
+}
+
+/* Etiquetas de estado tipo píldora. */
+.status-badge,
+.table-status {
+    border-radius: 999px;
+    padding: 3px 10px;
+}
+
+/* Pestañas como control segmentado: un contenedor con las opciones dentro. */
+.tabs {
+    display: inline-flex;
+    gap: 4px;
+    padding: 4px;
+
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+}
+
+.tab-button {
+    border-color: transparent;
+    border-radius: 8px;
+    background: transparent;
+}
+
+.tab-button:hover {
+    background: var(--bg-hover);
+}
+
+/* Controles de formulario y botones con radio coherente con las tarjetas. */
+.refresh-button,
+.icon-button,
+.search-input,
+.select-input {
+    border-radius: 8px;
+}
+
+.refresh-button {
+    box-shadow: 0 2px 8px rgba(37, 106, 191, 0.3);
+}
+
+/* Barras de progreso de memoria: más gruesas y con degradado de marca. */
+.progress-track {
+    height: 8px;
+    border-radius: 999px;
+}
+
+.progress-bar {
+    background: linear-gradient(90deg, var(--accent-strong), var(--accent));
+    border-radius: 999px;
+}
+
+/* Encabezados de tabla con fondo sutil para separar del contenido. */
+th {
+    background: var(--bg-subtle);
+}
+
+/* Respeta la preferencia del sistema de reducir animaciones. */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        transition-duration: 0.01ms !important;
+        animation-duration: 0.01ms !important;
+        /* Sin retrasos: el contenido aparece de inmediato, sin escalonado. */
+        animation-delay: 0ms !important;
+        transition-delay: 0ms !important;
+        scroll-behavior: auto !important;
+    }
+}
