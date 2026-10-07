@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+
+{% block page_title %}Rendimiento · DBA Monitor{% endblock %}
+{% block eyebrow %}Módulo 2{% endblock %}
+{% block heading %}Rendimiento de la base de datos{% endblock %}
+{% block description %}Sesiones activas, sesiones bloqueadas y consultas con mayor uso de CPU.{% endblock %}
+
+{% block content %}
+    <section class="summary-grid" aria-label="Resumen de rendimiento">
+        <article class="summary-card">
+            <span class="summary-label">Sesiones activas</span>
+            <strong id="active-session-count">—</strong>
+            <span class="summary-secondary">Usuarios conectados</span>
+        </article>
+        <article class="summary-card">
+            <span class="summary-label">Sesiones bloqueadas</span>
+            <strong id="blocked-session-count">—</strong>
+            <span class="summary-secondary">Esperando por otra sesión</span>
+        </article>
+        <article class="summary-card">
+            <span class="summary-label">SQL monitoreado</span>
+            <strong id="top-sql-count">—</strong>
+            <span class="summary-secondary">Consultas con ejecuciones</span>
+        </article>
+    </section>
+
+    <section class="panel">
+        <div class="panel-header">
+            <div>
+                <h2>Sesiones activas</h2>
+                <p>Sesiones de usuario que actualmente están activas en Oracle.</p>
+            </div>
+        </div>
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>SID</th>
+                        <th>Usuario</th>
+                        <th>Estado</th>
+                        <th>Equipo</th>
+                        <th>Programa</th>
+                        <th>Inicio de sesión</th>
+                    </tr>
+                </thead>
+                <tbody id="active-sessions-body">
+                    <tr><td colspan="6" class="table-message">Cargando sesiones...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <section class="panel">
+        <div class="panel-header">
+            <div>
+                <h2>Sesiones bloqueadas</h2>
+                <p>Sesiones que esperan a que otra sesión libere un recurso.</p>
+            </div>
+        </div>
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>SID</th>
+                        <th>Usuario</th>
+                        <th>Bloqueada por</th>
+                        <th>Evento</th>
+                        <th>Segundos esperando</th>
+                    </tr>
+                </thead>
+                <tbody id="blocked-sessions-body">
+                    <tr><td colspan="5" class="table-message">Cargando sesiones...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <section class="panel">
+        <div class="panel-header">
+            <div>
+                <h2>Consultas de mayor uso de CPU</h2>
+                <p>Consultas recientes con ejecuciones, ordenadas por tiempo de CPU acumulado.</p>
+            </div>
+        </div>
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>SQL ID</th>
+                        <th>SQL</th>
+                        <th>Ejecuciones</th>
+                        <th>CPU (s)</th>
+                        <th>Tiempo transcurrido (s)</th>
+                        <th>Lecturas de buffer</th>
+                        <th>Lecturas de disco</th>
+                    </tr>
+                </thead>
+                <tbody id="top-sql-body">
+                    <tr><td colspan="7" class="table-message">Cargando consultas...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+{% endblock %}
+
+{% block scripts %}
+    <script src="{{ url_for('static', path='js/common.js') }}"></script>
+    <script src="{{ url_for('static', path='js/performance.js') }}"></script>
+{% endblock %}

@@ -60,3 +60,12 @@ def root(request: Request):
         name="index.html",
         context={"active_module": "instance"},
     )
+
+
+@app.get("/rendimiento")
+def performance_page(request: Request):
+    return templates.TemplateResponse(
+        request=request,
+        name="performance.html",
+        context={"active_module": "performance"},
+    )
