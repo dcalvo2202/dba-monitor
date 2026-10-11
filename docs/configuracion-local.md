@@ -190,62 +190,21 @@ Ejecutar:
 GRANT CREATE SESSION TO DBA_MONITOR;
 ```
 
-### 5.5 Permisos requeridos por el Módulo 1 - Estado de la instancia
+### 5.5 Permiso requerido actualmente para el Módulo 1
 
-El Módulo 1 consulta vistas dinámicas de rendimiento (`V$`). En Oracle, `V$INSTANCE` es un sinónimo público de la vista `SYS.V_$INSTANCE`; por eso el privilegio se otorga sobre `V_$...`.
+La primera funcionalidad implementada consulta información de la instancia mediante `V$INSTANCE`.
 
-Conceder únicamente los privilegios necesarios:
-
-```sql
-GRANT SELECT ON SYS.V_$INSTANCE TO DBA_MONITOR;  -- identificación, estado y tiempo de actividad
-GRANT SELECT ON SYS.V_$SGA      TO DBA_MONITOR;  -- memoria SGA asignada
-GRANT SELECT ON SYS.V_$SGASTAT  TO DBA_MONITOR;  -- memoria SGA libre
-GRANT SELECT ON SYS.V_$PGASTAT  TO DBA_MONITOR;  -- memoria PGA asignada y en uso
-GRANT SELECT ON SYS.V_$PDBS     TO DBA_MONITOR;  -- bases de datos (PDBs) visibles
-```
-
-### 5.6 Permisos requeridos por el Módulo 5 - Auditoría
-
-El Módulo 5 consulta vistas `DBA_*` del diccionario de datos. Los privilegios están en un script que fija y verifica el contenedor `XEPDB1`.
-
-Desde la raíz del proyecto:
-
-```powershell
-sqlplus / as sysdba
-```
+Conceder únicamente el privilegio necesario:
 
 ```sql
-@sql/oracle/audit/setup/grants.sql
+GRANT SELECT ON SYS.V_$INSTANCE TO DBA_MONITOR;
 ```
 
-El script otorga `SELECT` sobre `DBA_USERS`, `DBA_ROLES`, `DBA_ROLE_PRIVS`, `DBA_SYS_PRIVS`, `DBA_TAB_PRIVS`, `DBA_OBJECTS` y `DBA_ERRORS`.
-
-#### Datos de prueba de auditoría
-
-Una instalación limpia de Oracle XE no tiene objetos inválidos. Para demostrar el módulo con información real, ejecutar una vez (también como `SYS AS SYSDBA`):
-
-```sql
-@sql/oracle/audit/setup/demo_objects.sql
-```
-
-Crea en `XEPDB1` el usuario sin contraseña `AUDIT_DEMO` (schema-only), tres roles (dos anidados, uno de ellos alcanzable por dos caminos, y uno no predeterminado) y tres objetos inválidos con errores de compilación. Los mensajes `Warning: ... compilation errors` son el resultado esperado. El script puede ejecutarse varias veces: elimina el escenario anterior antes de recrearlo. Al final incluye la reversión (`DROP USER AUDIT_DEMO CASCADE` y `DROP ROLE ...`).
-
-### 5.7 Privilegios actuales de DBA_MONITOR
-
-Con los módulos actuales, la cuenta queda limitada a:
+Los privilegios actuales de la cuenta quedan limitados a:
 
 ```text
 CREATE SESSION
-SELECT ON SYS.V_$INSTANCE, SYS.V_$SGA, SYS.V_$SGASTAT, SYS.V_$PGASTAT, SYS.V_$PDBS
-SELECT ON SYS.DBA_USERS, SYS.DBA_ROLES, SYS.DBA_ROLE_PRIVS, SYS.DBA_SYS_PRIVS,
-          SYS.DBA_TAB_PRIVS, SYS.DBA_OBJECTS, SYS.DBA_ERRORS
-```
-
-Para comprobarlos, conectado como `DBA_MONITOR`:
-
-```sql
-SELECT privilege FROM user_sys_privs;
-SELECT table_name, privilege FROM user_tab_privs ORDER BY table_name;
+SELECT ON SYS.V_$INSTANCE
 ```
 
 No se debe ejecutar:
@@ -336,41 +295,6 @@ La contraseña debe corresponder a la definida al crear `DBA_MONITOR`.
 El `.gitignore` del proyecto ya excluye `.env`.
 
 Nunca se deben incluir contraseñas reales, cuentas administrativas o información sensible en commits.
-
-### 7.1 Perfiles de conexión (selector de instancia) — opcional
-
-El encabezado de la aplicación tiene un selector **Instancia** que permite cambiar la instancia o contenedor monitoreado sin modificar el código (requisito del Módulo 1).
-
-Sin configuración adicional, la aplicación usa un único perfil con los datos de `.env`. Para tener varios perfiles (por ejemplo, la PDB `XEPDB1` y el contenedor raíz `CDB$ROOT`):
-
-1. Crear el usuario común para la raíz, como `SYS AS SYSDBA` desde la raíz del proyecto. El script pide la contraseña sin mostrarla:
-
-```sql
-@sql/oracle/connections/setup/create_cdb_monitor.sql
-```
-
-2. Agregar esa contraseña al `.env`:
-
-```env
-DB_PASSWORD_CDB=CONTRASEÑA_LOCAL_CDB
-```
-
-3. Crear el archivo local de perfiles a partir de la plantilla:
-
-```powershell
-copy config\connections.example.json config\connections.json
-```
-
-4. Reiniciar uvicorn.
-
-```text
-config/connections.example.json   Se almacena en Git (plantilla, sin contraseñas)
-config/connections.json           NO se almacena en Git (cada integrante tiene el suyo)
-```
-
-Las contraseñas nunca van en el JSON: cada perfil indica en `password_env` qué variable del `.env` la contiene. Al cambiar de perfil, la aplicación prueba la conexión antes de activarlo; si falla, mantiene el perfil anterior y muestra el motivo.
-
-**¿Por qué un usuario común `C##`?** `DBA_MONITOR` es un usuario local de `XEPDB1` y no existe en la raíz. Para conectarse a `CDB$ROOT` se necesita un usuario común, cuyo nombre empieza por `C##`. Sus privilegios se otorgan con `CONTAINER = CURRENT`, por lo que solo valen en la raíz.
 
 ---
 
@@ -518,19 +442,10 @@ El objetivo es reducir el impacto que podría tener un problema en la aplicació
 
 Actualmente:
 
-| Módulo | Necesidad | Privilegio |
-| --- | --- | --- |
-| General | Conectarse a Oracle | `CREATE SESSION` |
-| 1 - Instancia | Identificación, estado y tiempo de actividad | `SELECT ON SYS.V_$INSTANCE` |
-| 1 - Instancia | Memoria SGA asignada y libre | `SELECT ON SYS.V_$SGA`, `SYS.V_$SGASTAT` |
-| 1 - Instancia | Memoria PGA | `SELECT ON SYS.V_$PGASTAT` |
-| 1 - Instancia | Bases de datos (PDBs) | `SELECT ON SYS.V_$PDBS` |
-| 5 - Auditoría | Usuarios registrados | `SELECT ON SYS.DBA_USERS` |
-| 5 - Auditoría | Roles y su asignación | `SELECT ON SYS.DBA_ROLES`, `SYS.DBA_ROLE_PRIVS` |
-| 5 - Auditoría | Privilegios de sistema y de objeto | `SELECT ON SYS.DBA_SYS_PRIVS`, `SYS.DBA_TAB_PRIVS` |
-| 5 - Auditoría | Objetos inválidos y errores de compilación | `SELECT ON SYS.DBA_OBJECTS`, `SYS.DBA_ERRORS` |
-
-Se otorgan privilegios sobre vistas concretas y no roles amplios como `DBA`, `SELECT_CATALOG_ROLE` o el privilegio `SELECT ANY DICTIONARY`, que darían acceso a todo el diccionario de datos.
+| Necesidad | Privilegio |
+| --- | --- |
+| Conectarse a Oracle | `CREATE SESSION` |
+| Consultar estado básico de la instancia | `SELECT ON SYS.V_$INSTANCE` |
 
 Esta tabla debe actualizarse cuando se incorporen nuevas consultas administrativas.
 
@@ -566,25 +481,17 @@ GRANT SELECT ON SYS.V_$INSTANCE TO DBA_MONITOR;
 
 y verificar que fue concedido desde `XEPDB1`.
 
-### V$PDBS vacía desde el perfil CDB$ROOT
+### GET /favicon.ico devuelve 404
 
-En la raíz, las vistas `V$` de un usuario común solo muestran los contenedores autorizados con el atributo `CONTAINER_DATA` (por defecto, solo la raíz). El script `create_cdb_monitor.sql` ya lo configura; si el usuario se creó antes, ejecutar como `SYS`:
+El navegador solicita automáticamente un favicon.
 
-```sql
-ALTER USER C##DBA_MONITOR SET CONTAINER_DATA = ALL CONTAINER = CURRENT;
+Actualmente el proyecto todavía no define uno, por lo que:
+
+```text
+GET /favicon.ico 404 Not Found
 ```
 
-### Una página nueva responde "Not Found" después de un pull
-
-En Windows, `uvicorn --reload` a veces no detecta los cambios que llegan con `git pull` o al cambiar de rama. Detener el servidor con `Ctrl+C` y volver a ejecutar `uvicorn app.main:app --reload`.
-
-### Las tipografías no cargan sin internet
-
-La interfaz usa las fuentes Fira Sans y Fira Code desde Google Fonts. Sin conexión a internet la aplicación funciona igual: el navegador usa automáticamente fuentes del sistema (Segoe UI, Consolas).
-
-### Ícono de la pestaña
-
-El ícono de la pestaña está definido en `base.html` como SVG en línea, por lo que ya no aparece el error `GET /favicon.ico 404 Not Found` en el registro del servidor.
+es normal y no representa un fallo de la API.
 
 ---
 
@@ -605,8 +512,5 @@ Actualmente se encuentra implementado:
 - Fecha de inicio.
 - Tiempo de actividad de la instancia.
 - Endpoint `/api/instance`.
-- Plantilla base del frontend (`base.html`) compartida por todos los módulos, con tema claro/oscuro, actualización automática opcional, menú adaptable a móvil y navegación accesible por teclado.
-- Módulo 5 - Auditoría (`/auditoria`): usuarios, roles, privilegios directos y heredados por roles, y objetos inválidos con sus errores de compilación.
-- Perfiles de conexión: selector de instancia en el encabezado (PDB `XEPDB1` y raíz `CDB$ROOT` con el usuario común `C##DBA_MONITOR`).
 
 Los demás requerimientos del Módulo 1 y los módulos posteriores se incorporarán progresivamente.
