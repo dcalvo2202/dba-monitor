@@ -1,0 +1,31 @@
+{#
+    Íconos SVG reutilizables (Lucide, licencia ISC), dibujados en línea para
+    no depender de archivos externos. Uso en cualquier plantilla:
+
+        {% from "_icons.html" import icon %}
+        {{ icon("database") }}
+
+    Son decorativos (aria-hidden): el texto junto al ícono ya describe su
+    significado. Heredan el color del texto (stroke="currentColor").
+#}
+{% macro icon(name, class="icon") %}
+<svg class="{{ class }}" aria-hidden="true" focusable="false" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    {% if name == "power" %}
+        <path d="M12 2v10"/><path d="M18.4 6.6a9 9 0 1 1-12.77.04"/>
+    {% elif name == "server" %}
+        <rect x="2" y="2" width="20" height="8" rx="2"/><rect x="2" y="14" width="20" height="8" rx="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/>
+    {% elif name == "database" %}
+        <ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14a9 3 0 0 0 18 0V5"/><path d="M3 12a9 3 0 0 0 18 0"/>
+    {% elif name == "clock" %}
+        <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+    {% elif name == "users" %}
+        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+    {% elif name == "alert" %}
+        <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/>
+    {% elif name == "key" %}
+        <circle cx="7.5" cy="15.5" r="5.5"/><path d="m21 2-9.6 9.6"/><path d="m15.5 7.5 3 3L22 7l-3-3"/>
+    {% elif name == "file-x" %}
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="m14.5 12.5-5 5"/><path d="m9.5 12.5 5 5"/>
+    {% endif %}
+</svg>
+{% endmacro %}
