@@ -1,19 +1,4 @@
-from app.modules.instance.repository import (
-    get_instance_info,
-    get_memory_info,
-    get_pdbs,
-    get_sga_components,
-)
-
-
-# Nombre en español de cada componente de V$SGA, para el gráfico de
-# composición de la SGA. Un componente desconocido conserva su nombre.
-SGA_COMPONENT_LABELS = {
-    "Database Buffers": "Caché de datos",
-    "Variable Size": "Área variable (shared pool, large pool...)",
-    "Fixed Size": "Área fija",
-    "Redo Buffers": "Buffer de redo",
-}
+from app.modules.instance.repository import get_instance_info
 
 
 def format_uptime(total_seconds: int) -> str:
@@ -23,8 +8,6 @@ def format_uptime(total_seconds: int) -> str:
 
     return f"{days}d {hours}h {minutes}m {seconds}s"
 
-def bytes_to_mb(value: int) -> float:
-    return round(value / (1024 * 1024), 2)
 
 def get_instance_status():
     row = get_instance_info()
@@ -39,100 +22,14 @@ def get_instance_status():
         status,
         startup_time,
         uptime_seconds,
-        database_name,
-        container_name,
-        service_name,
     ) = row
 
     return {
-    "dbms": "Oracle Database",
-    "instance_name": instance_name,
-    "host_name": host_name,
-    "version": version,
-    "status": status,
-    "startup_time": startup_time,
-    "uptime_seconds": uptime_seconds,
-    "uptime": format_uptime(uptime_seconds),
-    "database_name": database_name,
-    "container_name": container_name,
-    "service_name": service_name,
-    }
-
-def get_memory_status():
-    row = get_memory_info()
-
-    if row is None:
-        return None
-
-    (
-        sga_allocated_bytes,
-        sga_free_bytes,
-        pga_allocated_bytes,
-        pga_inuse_bytes,
-    ) = row
-
-    sga_used_estimated_bytes = sga_allocated_bytes - sga_free_bytes
-
-    total_allocated_bytes = ( 
-        sga_allocated_bytes + pga_allocated_bytes 
-    )
-    
-    total_used_estimated_bytes = (
-        sga_used_estimated_bytes + pga_inuse_bytes
-    )
-
-    return {
-        "sga_allocated_mb": bytes_to_mb(sga_allocated_bytes),
-        "sga_free_mb": bytes_to_mb(sga_free_bytes),
-        "sga_used_estimated_mb": bytes_to_mb(sga_used_estimated_bytes),
-        "pga_allocated_mb": bytes_to_mb(pga_allocated_bytes),
-        "pga_inuse_mb": bytes_to_mb(pga_inuse_bytes),
-        "total_allocated_mb": bytes_to_mb(total_allocated_bytes),
-        "total_used_estimated_mb": bytes_to_mb(total_used_estimated_bytes),
-    }
-
-def get_pdb_status():
-    rows = get_pdbs()
-
-    return [
-        {
-            "name": name,
-            "open_mode": open_mode,
-            "restricted": restricted,
-        }
-        for name, open_mode, restricted in rows
-    ]
-
-def get_sga_components_status():
-    """Componentes de la SGA con su tamaño en MB y su porcentaje del total."""
-    rows = get_sga_components()
-    total_bytes = sum(value for _, value in rows) or 1
-
-    return [
-        {
-            "name": name,
-            "label": SGA_COMPONENT_LABELS.get(name, name),
-            "mb": bytes_to_mb(value),
-            "percent": round(value * 100 / total_bytes, 2),
-        }
-        for name, value in rows
-    ]
-
-def get_instance_overview():
-    instance_status = get_instance_status()
-    memory_status = get_memory_status()
-    pdbs = get_pdb_status()
-
-    # Se agrega dentro de "memory" para mantener intacta la estructura que
-    # ya consume instance.js.
-    if memory_status is not None:
-        memory_status["sga_components"] = get_sga_components_status()
-
-    if instance_status is None:
-        return None
-
-    return {
-        **instance_status,
-        "memory": memory_status,
-        "pdbs": pdbs,
+        "instance_name": instance_name,
+        "host_name": host_name,
+        "version": version,
+        "status": status,
+        "startup_time": startup_time,
+        "uptime_seconds": uptime_seconds,
+        "uptime": format_uptime(uptime_seconds),
     }
