@@ -4,9 +4,11 @@ from fastapi import FastAPI, Request
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
 
+
 from app.modules.audit.router import router as audit_router
 from app.modules.connections.router import router as connections_router
 from app.modules.instance.router import router as instance_router
+from app.modules.storage.router import router as storage_router
 
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -48,7 +50,7 @@ async def revalidate_static_files(request: Request, call_next):
 app.include_router(connections_router)
 app.include_router(instance_router)
 app.include_router(audit_router)
-
+app.include_router(storage_router)
 
 @app.get("/")
 def root(request: Request):
@@ -75,4 +77,12 @@ def audit_page(request: Request):
         request=request,
         name="audit.html",
         context={"active_module": "audit"},
+    )
+
+@app.get("/almacenamiento", include_in_schema=False)
+def storage_page(request: Request):
+    return templates.TemplateResponse(
+        request=request,
+        name="storage.html",
+        context={}
     )
