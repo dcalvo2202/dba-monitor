@@ -1,101 +1,227 @@
 {#
-    Módulo 3 — Gestión de almacenamiento.
-    Hereda sidebar, encabezado y estilos de base.html.
-    El JavaScript rellena los elementos identificados por id.
+    Módulo 3 - Gestión del almacenamiento.
+
+    Hereda la estructura común de base.html. Presenta el tamaño de la base
+    de datos, el uso de cada tablespace, los archivos de datos, los objetos
+    de mayor tamaño y el historial de crecimiento. Los datos se cargan desde
+    /api/storage mediante static/js/storage.js; esta plantilla solo define
+    la estructura vacía.
 #}
 {% extends "base.html" %}
+{% from "_icons.html" import icon %}
 
 {% block page_title %}Almacenamiento · DBA Monitor{% endblock %}
+
 {% block eyebrow %}Módulo 3{% endblock %}
-{% block heading %}Gestión de almacenamiento{% endblock %}
-{% block description %}Capacidad de tablespaces, datafiles, segmentos e historial de Oracle.{% endblock %}
+
+{% block heading %}Gestión del almacenamiento{% endblock %}
+
+{% block description %}Tablespaces, archivos de datos, objetos de mayor tamaño y crecimiento de la base de datos.{% endblock %}
 
 {% block content %}
 
-    <div class="toolbar">
-        <button class="refresh-button" id="refresh" type="button">Actualizar</button>
-        <button class="refresh-button" id="snapshot" type="button">Registrar medición</button>
+<!-- Resumen: indicadores principales del módulo -->
+<section class="summary-grid">
+
+    <article class="summary-card">
+        <span class="summary-icon">{{ icon("database") }}</span>
+        <span class="summary-label">Tamaño de la base</span>
+        <strong id="summary-size">—</strong>
+        <span id="summary-size-detail" class="summary-secondary">Espacio asignado en disco</span>
+    </article>
+
+    <article class="summary-card">
+        <span class="summary-icon">{{ icon("hard-drive") }}</span>
+        <span class="summary-label">Tablespaces</span>
+        <strong id="summary-tablespaces" class="status-badge">—</strong>
+        <span id="summary-tablespaces-detail" class="summary-secondary">Estado del espacio</span>
+    </article>
+
+    <article class="summary-card">
+        <span class="summary-icon">{{ icon("server") }}</span>
+        <span class="summary-label">Archivos de datos</span>
+        <strong id="summary-datafiles">—</strong>
+        <span id="summary-datafiles-detail" class="summary-secondary">Datafiles y tempfiles</span>
+    </article>
+
+    <article class="summary-card">
+        <span class="summary-icon">{{ icon("trending-up") }}</span>
+        <span class="summary-label">Crecimiento</span>
+        <strong id="summary-growth">—</strong>
+        <span id="summary-growth-detail" class="summary-secondary">Según el historial de mediciones</span>
+    </article>
+
+</section>
+
+<!-- Gráficos. Los dibuja static/js/charts.js. -->
+<section class="chart-grid" aria-label="Panorama del almacenamiento">
+
+    <article class="panel chart-panel">
+        <div class="panel-header">
+            <div>
+                <h2>Espacio usado por tablespace</h2>
+                <p>Espacio ocupado por datos en cada tablespace. El porcentaje sobre su máximo está en la tabla.</p>
+            </div>
+        </div>
+        <div id="tablespace-chart" class="chart-body">
+            <p class="viz-empty">Cargando información...</p>
+        </div>
+    </article>
+
+    <article class="panel chart-panel">
+        <div class="panel-header">
+            <div>
+                <h2>Objetos de mayor tamaño</h2>
+                <p>Tablas, índices y LOBs que más espacio ocupan.</p>
+            </div>
+        </div>
+        <div id="objects-chart" class="chart-body">
+            <p class="viz-empty">Cargando información...</p>
+        </div>
+    </article>
+
+</section>
+
+<!-- Tablespaces -->
+<section class="panel" aria-labelledby="tablespaces-title">
+    <div class="panel-header">
+        <div>
+            <h2 id="tablespaces-title">Tablespaces</h2>
+            <p>Espacio utilizado y disponible. El uso se mide sobre el tamaño máximo, considerando la autoextensión.</p>
+        </div>
     </div>
 
-    <p id="status" class="panel-message" role="status" aria-live="polite">Cargando información de Oracle…</p>
-
-    <section class="summary-grid" aria-label="Resumen de almacenamiento">
-      <article class="summary-card">
-        <span class="summary-label">Tamaño asignado</span>
-        <strong id="total-size">—</strong>
-        <span class="summary-secondary">Suma de datafiles permanentes</span>
-      </article>
-      <article class="summary-card">
-        <span class="summary-label">Tablespaces</span>
-        <strong id="tablespace-count">—</strong>
-        <span class="summary-secondary">Espacios permanentes consultados</span>
-      </article>
-      <article class="summary-card">
-        <span class="summary-label">Datafiles</span>
-        <strong id="datafile-count">—</strong>
-        <span class="summary-secondary">Archivos de datos</span>
-      </article>
-      <article class="summary-card">
-        <span class="summary-label">Segmentos principales</span>
-        <strong id="object-count">—</strong>
-        <span class="summary-secondary">Hasta 20 objetos más grandes</span>
-      </article>
-    </section>
-
-    <section class="panel pdb-panel" aria-labelledby="tablespaces-title">
-      <div class="panel-header">
-        <h2 id="tablespaces-title">Uso por tablespace</h2>
-        <p>Espacio total, ocupado y disponible. La barra indica el porcentaje utilizado.</p>
-      </div>
-      <div class="table-wrapper">
+    <div class="table-wrapper" role="region" aria-label="Tabla de tablespaces" tabindex="0">
         <table>
-          <thead><tr><th>Tablespace</th><th>Total (MB)</th><th>Usado (MB)</th><th>Libre (MB)</th><th>Utilización</th></tr></thead>
-          <tbody id="tablespaces"><tr><td colspan="5">Cargando…</td></tr></tbody>
+            <thead>
+                <tr>
+                    <th>Tablespace</th>
+                    <th>Tipo</th>
+                    <th>Usado</th>
+                    <th>Libre</th>
+                    <th>Asignado</th>
+                    <th>Máximo</th>
+                    <th>Uso del máximo</th>
+                    <th>Estado</th>
+                </tr>
+            </thead>
+            <tbody id="tablespaces-table-body">
+                <tr><td colspan="8">Cargando información...</td></tr>
+            </tbody>
         </table>
-      </div>
-    </section>
+    </div>
+</section>
 
-    <section class="panel pdb-panel" aria-labelledby="datafiles-title">
-      <div class="panel-header">
-        <h2 id="datafiles-title">Datafiles</h2>
-        <p>Archivos físicos, tamaño actual y configuración de autoextensión.</p>
-      </div>
-      <div class="table-wrapper">
-        <table>
-          <thead><tr><th>ID</th><th>Archivo</th><th>Tablespace</th><th>Tamaño (MB)</th><th>Autoextensible</th><th>Máximo (MB)</th></tr></thead>
-          <tbody id="datafiles"><tr><td colspan="6">Cargando…</td></tr></tbody>
-        </table>
-      </div>
-    </section>
+<!-- Crecimiento: historial de mediciones (DBA_MONITOR_HIST.STORAGE_SNAPSHOT) -->
+<section class="panel" aria-labelledby="growth-title">
+    <div class="panel-header">
+        <div>
+            <h2 id="growth-title">Crecimiento de la base de datos</h2>
+            <p id="growth-description">Mediciones registradas a diario por Oracle y con el botón «Registrar medición».</p>
+        </div>
+        <button id="snapshot-button" class="refresh-button" type="button">Registrar medición</button>
+    </div>
 
-    <section class="panel pdb-panel" aria-labelledby="objects-title">
-      <div class="panel-header">
-        <h2 id="objects-title">Objetos más grandes</h2>
-        <p>Los 20 segmentos con mayor espacio asignado.</p>
-      </div>
-      <div class="table-wrapper">
-        <table>
-          <thead><tr><th>Propietario</th><th>Segmento</th><th>Tipo</th><th>Tablespace</th><th>Tamaño (MB)</th></tr></thead>
-          <tbody id="large-objects"><tr><td colspan="5">Cargando…</td></tr></tbody>
-        </table>
-      </div>
-    </section>
+    <p id="growth-message" class="panel-message" role="status"></p>
 
-    <section class="panel pdb-panel" aria-labelledby="history-title">
-      <div class="panel-header">
-        <h2 id="history-title">Historial de mediciones</h2>
-        <p>Los registros se guardan al pulsar «Registrar medición».</p>
-      </div>
-      <div class="table-wrapper">
+    <dl id="growth-comparison" class="details-list" hidden>
+        <div><dt>Periodo comparado</dt><dd id="growth-period">—</dd></div>
+        <div><dt>Espacio usado</dt><dd id="growth-used">—</dd></div>
+        <div><dt>Crecimiento</dt><dd id="growth-total">—</dd></div>
+        <div><dt>Ritmo</dt><dd id="growth-rate">—</dd></div>
+        <div><dt>Espacio máximo alcanzado en</dt><dd id="growth-full">—</dd></div>
+    </dl>
+
+    <h3 class="table-title">Mediciones</h3>
+    <div class="table-wrapper" role="region" aria-label="Historial de mediciones" tabindex="0">
         <table>
-          <thead><tr><th>Fecha</th><th>Tablespace</th><th>Total (MB)</th><th>Usado (MB)</th><th>Libre (MB)</th></tr></thead>
-          <tbody id="history"><tr><td colspan="5">Cargando…</td></tr></tbody>
+            <thead>
+                <tr>
+                    <th>Fecha</th>
+                    <th>Usado</th>
+                    <th>Asignado</th>
+                    <th>Cambio respecto de la anterior</th>
+                </tr>
+            </thead>
+            <tbody id="history-table-body">
+                <tr><td colspan="4">Cargando información...</td></tr>
+            </tbody>
         </table>
-      </div>
-    </section>
-  
+    </div>
+</section>
+
+<!-- Archivos de datos -->
+<section class="panel" aria-labelledby="datafiles-title">
+    <div class="panel-header">
+        <div>
+            <h2 id="datafiles-title">Archivos de datos</h2>
+            <p>Archivos físicos, su tamaño actual y cuánto pueden crecer.</p>
+        </div>
+    </div>
+
+    <div class="table-wrapper" role="region" aria-label="Tabla de archivos de datos" tabindex="0">
+        <table>
+            <thead>
+                <tr>
+                    <th>Archivo</th>
+                    <th>Tablespace</th>
+                    <th>Tipo</th>
+                    <th>Tamaño</th>
+                    <th>Máximo</th>
+                    <th>Autoextensible</th>
+                    <th>Incremento</th>
+                    <th>Estado</th>
+                </tr>
+            </thead>
+            <tbody id="datafiles-table-body">
+                <tr><td colspan="8">Cargando información...</td></tr>
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<!-- Objetos de mayor tamaño -->
+<section class="panel" aria-labelledby="objects-title">
+    <div class="panel-header">
+        <div>
+            <h2 id="objects-title">Objetos de mayor tamaño</h2>
+            <p>Los 20 segmentos que más almacenamiento consumen.</p>
+        </div>
+    </div>
+
+    <div class="toolbar">
+        <label class="checkbox-label">
+            {# Marcada por defecto: en una base recién instalada los objetos
+               más grandes son los de Oracle. Al desmarcarla se ven solo los
+               de las aplicaciones. #}
+            <input id="include-oracle" type="checkbox" checked>
+            Incluir objetos internos de Oracle
+        </label>
+    </div>
+
+    <div class="table-wrapper" role="region" aria-label="Tabla de objetos de mayor tamaño" tabindex="0">
+        <table>
+            <thead>
+                <tr>
+                    <th>Propietario</th>
+                    <th>Objeto</th>
+                    <th>Tipo</th>
+                    <th>Tablespace</th>
+                    <th>Tamaño</th>
+                    <th>Extents</th>
+                </tr>
+            </thead>
+            <tbody id="objects-table-body">
+                <tr><td colspan="6">Cargando información...</td></tr>
+            </tbody>
+        </table>
+    </div>
+</section>
+
 {% endblock %}
 
 {% block scripts %}
-     <script src="{{ url_for('static', path='js/storage.js') }}"></script>
+    <script src="{{ url_for('static', path='js/common.js') }}"></script>
+    <script src="{{ url_for('static', path='js/charts.js') }}"></script>
+    <script src="{{ url_for('static', path='js/storage.js') }}"></script>
 {% endblock %}

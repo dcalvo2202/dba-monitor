@@ -230,7 +230,66 @@ Una instalación limpia de Oracle XE no tiene objetos inválidos. Para demostrar
 
 Crea en `XEPDB1` el usuario sin contraseña `AUDIT_DEMO` (schema-only), tres roles (dos anidados, uno de ellos alcanzable por dos caminos, y uno no predeterminado) y tres objetos inválidos con errores de compilación. Los mensajes `Warning: ... compilation errors` son el resultado esperado. El script puede ejecutarse varias veces: elimina el escenario anterior antes de recrearlo. Al final incluye la reversión (`DROP USER AUDIT_DEMO CASCADE` y `DROP ROLE ...`).
 
-### 5.7 Privilegios actuales de DBA_MONITOR
+### 5.7 Módulo 4 - Respaldo y recuperación
+
+Los respaldos RMAN son de nivel CDB: Oracle no muestra su historial desde una PDB (en `XEPDB1`, `V$RMAN_BACKUP_JOB_DETAILS` aparece vacía aunque existan respaldos). Por eso el módulo se consulta con el perfil **CDB$ROOT** (usuario común `C##DBA_MONITOR`, ver [7.1](#71-perfiles-de-conexión-selector-de-instancia--opcional)). Desde `XEPDB1` la página indica "Sin datos" en lugar de un diagnóstico falso.
+
+Todos los pasos se ejecutan **desde la raíz del proyecto** (si no, SQL*Plus responde `SP2-0310: unable to open file`).
+
+**1. Privilegios** (requiere haber creado antes `C##DBA_MONITOR` con `create_cdb_monitor.sql`):
+
+```powershell
+sqlplus / as sysdba @sql/oracle/backup/setup/grants.sql
+```
+
+Otorga únicamente `SELECT` sobre `V$RMAN_BACKUP_JOB_DETAILS`, `V$BACKUP_SET_DETAILS`, `V$DATABASE` y `V$RECOVERY_FILE_DEST`, a `C##DBA_MONITOR` en la raíz y a `DBA_MONITOR` en `XEPDB1`. El usuario de monitoreo puede **ver** los respaldos, pero no ejecutarlos ni borrarlos.
+
+**2. Modo ARCHIVELOG y Fast Recovery Area** — ⚠️ **reinicia la instancia**; cerrar antes la aplicación y SQL Developer:
+
+```powershell
+sqlplus / as sysdba @sql/oracle/backup/setup/enable_archivelog.sql
+```
+
+Si la base no tiene Fast Recovery Area (`db_recovery_file_dest` vacío, frecuente en XE), el script pide una carpeta (Enter = `C:\app\fast_recovery_area`), la crea y la configura con 10 GB. Al final `ARCHIVE LOG LIST` debe mostrar `Archive Mode` y `USE_DB_RECOVERY_FILE_DEST`, y `XEPDB1` en `READ WRITE`. La reversión a `NOARCHIVELOG` está al final del script.
+
+**3. Respaldos de prueba** (en PowerShell, de 1 a 10 minutos, unos 700 MB en la FRA):
+
+```powershell
+.\sql\oracle\backup\setup\demo_backups.cmd
+```
+
+Ejecuta, cada uno en su propia sesión RMAN: incremental nivel 0, incremental nivel 1, respaldo de archived logs y un respaldo **fallido a propósito** (el error `ORA-19504` es el resultado esperado). Requiere que el usuario de Windows pertenezca al grupo `ORA_DBA` (el que instaló Oracle XE) para que `rman target /` entre sin contraseña.
+
+### 5.8 Módulo 3 - Gestión del almacenamiento
+
+Desde la raíz del proyecto, como `SYS AS SYSDBA` (ninguno reinicia la instancia):
+
+**1. Privilegios de lectura:**
+
+```powershell
+sqlplus / as sysdba @sql/oracle/storage/setup/grants.sql
+```
+
+Otorga solo `SELECT` sobre `DBA_TABLESPACES`, `DBA_DATA_FILES`, `DBA_FREE_SPACE`, `DBA_TEMP_FILES`, `DBA_TEMP_FREE_SPACE` y `DBA_SEGMENTS`, a `DBA_MONITOR` (XEPDB1) y a `C##DBA_MONITOR` (CDB$ROOT). El módulo también usa `DBA_USERS`, ya otorgada en [5.6](#56-permisos-requeridos-por-el-módulo-5---auditoría).
+
+**2. Historial de crecimiento:**
+
+```powershell
+sqlplus / as sysdba @sql/oracle/storage/setup/create_storage_history.sql
+```
+
+Crea en `XEPDB1` el esquema sin contraseña `DBA_MONITOR_HIST` con:
+
+- la tabla `STORAGE_SNAPSHOT` (una fila por tablespace en cada medición);
+- el procedimiento `RECORD_STORAGE_SNAPSHOT`, que toma una medición con los datos del diccionario;
+- la tarea `STORAGE_SNAPSHOT_DAILY` (`DBMS_SCHEDULER`), que lo ejecuta todos los días a las 00:00;
+- una primera medición.
+
+`DBA_MONITOR` solo recibe `EXECUTE` sobre el procedimiento y `SELECT` sobre la tabla: puede pedir una medición (botón «Registrar medición»), pero no crear tablas ni insertar o modificar filas. El script se puede volver a ejecutar (borra el historial anterior); la reversión es `DROP USER DBA_MONITOR_HIST CASCADE`.
+
+El uso de cada tablespace se mide sobre su **tamaño máximo** (autoextensión incluida): un tablespace al 99 % de su tamaño actual no está lleno si sus datafiles todavía pueden crecer. Las alertas (85 % advertencia, 95 % crítico) solo aplican a tablespaces permanentes.
+
+### 5.9 Privilegios actuales de DBA_MONITOR
 
 Con los módulos actuales, la cuenta queda limitada a:
 
@@ -573,6 +632,12 @@ En la raíz, las vistas `V$` de un usuario común solo muestran los contenedores
 ```sql
 ALTER USER C##DBA_MONITOR SET CONTAINER_DATA = ALL CONTAINER = CURRENT;
 ```
+
+### RMAN-02001 o SP2-0310 al preparar el Módulo 4
+
+- `SP2-0310: unable to open file`: SQL*Plus se abrió fuera de la carpeta del proyecto; entrar a ella con `cd` y repetir.
+- `SP2-0734: unknown command beginning "sqlplus / ..."`: se escribió `sqlplus` estando ya dentro de SQL*Plus; ejecutar solo `@sql/oracle/backup/setup/<script>.sql`.
+- `RMAN-02001: unrecognized punctuation symbol "\"`: RMAN no acepta en `cmdfile=` rutas completas con espacios. `demo_backups.cmd` ya entra a su carpeta y usa solo el nombre del archivo.
 
 ### Una página nueva responde "Not Found" después de un pull
 
