@@ -23,6 +23,7 @@ uvicorn app.main:app --reload
 ## Páginas
 
 - GET /            Módulo 1 - Estado general de la instancia
+- GET /respaldos   Módulo 4 - Respaldo y recuperación
 - GET /auditoria   Módulo 5 - Auditoría
 
 ## Endpoints de la API
@@ -34,6 +35,8 @@ La documentación interactiva de todos los endpoints está en `/docs`.
 | 1 - Instancia | GET /api/instance | Estado, memoria y PDBs de la instancia |
 | 1 - Instancia | GET /api/connections | Perfiles de conexión disponibles y el activo (sin contraseñas) |
 | 1 - Instancia | PUT /api/connections/active | Cambia la instancia monitoreada (`{"name": "cdb_root"}`); valida la conexión antes |
+| 4 - Respaldos | GET /api/backup | Último respaldo exitoso, modo de archivado, FRA, evaluación de riesgo e historial (`?max_rows=50`). Usar el perfil CDB$ROOT |
+| 4 - Respaldos | GET /api/backup/history | Solo el historial de trabajos RMAN (`?max_rows=50`) |
 | 5 - Auditoría | GET /api/audit/users | Usuarios y hallazgos de seguridad (`?include_oracle=true` incluye cuentas internas) |
 | 5 - Auditoría | GET /api/audit/users/{username}/privileges | Roles y privilegios directos y heredados (`?privilege_type=SISTEMA\|OBJETO&max_rows=200`) |
 | 5 - Auditoría | GET /api/audit/roles | Roles y su asignación |

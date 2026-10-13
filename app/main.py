@@ -5,6 +5,7 @@ from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
 
 from app.modules.audit.router import router as audit_router
+from app.modules.backup.router import router as backup_router
 from app.modules.connections.router import router as connections_router
 from app.modules.instance.router import router as instance_router
 
@@ -47,6 +48,7 @@ async def revalidate_static_files(request: Request, call_next):
 
 app.include_router(connections_router)
 app.include_router(instance_router)
+app.include_router(backup_router)
 app.include_router(audit_router)
 
 
@@ -61,6 +63,20 @@ def root(request: Request):
         request=request,
         name="index.html",
         context={"active_module": "instance"},
+    )
+
+
+@app.get("/respaldos")
+def backup_page(request: Request):
+    """Página del Módulo 4 (Respaldo y recuperación).
+
+    La plantilla solo contiene la estructura; los datos se cargan desde
+    /api/backup mediante static/js/backup.js.
+    """
+    return templates.TemplateResponse(
+        request=request,
+        name="backup.html",
+        context={"active_module": "backup"},
     )
 
 
