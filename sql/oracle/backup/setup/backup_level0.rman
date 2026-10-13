@@ -1,0 +1,24 @@
+# ==============================================================================
+#  Archivo   : sql/oracle/backup/setup/backup_level0.rman
+#  Módulo    : 4 - Respaldo y recuperación (datos de prueba)
+#  Propósito : Respaldo incremental de nivel 0 de toda la base de datos
+#              (CDB$ROOT, PDB$SEED y XEPDB1).
+#  Ejecutar  : Lo ejecuta demo_backups.cmd, o a mano desde la raíz del
+#              proyecto:
+#                  rman target / cmdfile=sql\oracle\backup\setup\backup_level0.rman
+#  Requisito : Modo ARCHIVELOG (enable_archivelog.sql); sin él, RMAN solo
+#              respalda con la base cerrada.
+#
+#  Nivel 0 = copia de TODOS los bloques usados. Es la base de la estrategia
+#  incremental: un respaldo de nivel 1 solo guarda los bloques que cambiaron
+#  desde el último nivel 0 o 1, por eso es mucho más pequeño y rápido.
+#
+#  AS COMPRESSED BACKUPSET usa la compresión BASIC, incluida en todas las
+#  ediciones de Oracle (también XE). Reduce el espacio ocupado en la FRA.
+#  TAG identifica el respaldo en LIST BACKUP y en las vistas de Oracle.
+# ==============================================================================
+
+BACKUP AS COMPRESSED BACKUPSET
+    INCREMENTAL LEVEL 0
+    DATABASE
+    TAG 'DBAMON_NIVEL0';

@@ -1,0 +1,18 @@
+# ==============================================================================
+#  Archivo   : sql/oracle/backup/setup/backup_failed.rman
+#  Módulo    : 4 - Respaldo y recuperación (datos de prueba)
+#  Propósito : Provocar A PROPÓSITO un respaldo fallido, para demostrar que
+#              el módulo detecta y señala los trabajos con estado FAILED.
+#  Ejecutar  : Lo ejecuta demo_backups.cmd, o a mano desde la raíz del
+#              proyecto:
+#                  rman target / cmdfile=sql\oracle\backup\setup\backup_failed.rman
+#
+#  El respaldo apunta a una carpeta que no existe. RMAN no crea carpetas,
+#  así que falla con ORA-19504 ("failed to create file") y Oracle registra
+#  el trabajo con estado FAILED. No modifica nada de la base de datos.
+#  Es normal que RMAN muestre el error en pantalla.
+# ==============================================================================
+
+BACKUP DATAFILE 1
+    FORMAT 'C:\dba_monitor_carpeta_inexistente\%U'
+    TAG 'DBAMON_FALLIDO';

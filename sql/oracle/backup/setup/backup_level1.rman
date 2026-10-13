@@ -1,0 +1,17 @@
+# ==============================================================================
+#  Archivo   : sql/oracle/backup/setup/backup_level1.rman
+#  Módulo    : 4 - Respaldo y recuperación (datos de prueba)
+#  Propósito : Respaldo incremental de nivel 1 de toda la base de datos.
+#  Ejecutar  : Lo ejecuta demo_backups.cmd, o a mano desde la raíz del
+#              proyecto (después del nivel 0):
+#                  rman target / cmdfile=sql\oracle\backup\setup\backup_level1.rman
+#
+#  Nivel 1 = solo los bloques modificados desde el último respaldo de nivel
+#  0 o 1. Para restaurar, RMAN aplica el nivel 0 y luego cada nivel 1.
+#  Si no existiera un nivel 0 previo, RMAN haría un nivel 0 automáticamente.
+# ==============================================================================
+
+BACKUP AS COMPRESSED BACKUPSET
+    INCREMENTAL LEVEL 1
+    DATABASE
+    TAG 'DBAMON_NIVEL1';
