@@ -4,7 +4,6 @@ from fastapi import FastAPI, Request
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
 
-
 from app.modules.audit.router import router as audit_router
 from app.modules.backup.router import router as backup_router
 from app.modules.connections.router import router as connections_router
@@ -50,9 +49,10 @@ async def revalidate_static_files(request: Request, call_next):
 
 app.include_router(connections_router)
 app.include_router(instance_router)
+app.include_router(storage_router)
 app.include_router(backup_router)
 app.include_router(audit_router)
-app.include_router(storage_router)
+
 
 @app.get("/")
 def root(request: Request):
@@ -65,6 +65,20 @@ def root(request: Request):
         request=request,
         name="index.html",
         context={"active_module": "instance"},
+    )
+
+
+@app.get("/almacenamiento")
+def storage_page(request: Request):
+    """Página del Módulo 3 (Gestión del almacenamiento).
+
+    La plantilla solo contiene la estructura; los datos se cargan desde
+    /api/storage mediante static/js/storage.js.
+    """
+    return templates.TemplateResponse(
+        request=request,
+        name="storage.html",
+        context={"active_module": "storage"},
     )
 
 
@@ -93,12 +107,4 @@ def audit_page(request: Request):
         request=request,
         name="audit.html",
         context={"active_module": "audit"},
-    )
-
-@app.get("/almacenamiento", include_in_schema=False)
-def storage_page(request: Request):
-    return templates.TemplateResponse(
-        request=request,
-        name="storage.html",
-        context={}
     )
