@@ -8,6 +8,7 @@ from app.modules.audit.router import router as audit_router
 from app.modules.backup.router import router as backup_router
 from app.modules.connections.router import router as connections_router
 from app.modules.instance.router import router as instance_router
+from app.modules.storage.router import router as storage_router
 
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -48,6 +49,7 @@ async def revalidate_static_files(request: Request, call_next):
 
 app.include_router(connections_router)
 app.include_router(instance_router)
+app.include_router(storage_router)
 app.include_router(backup_router)
 app.include_router(audit_router)
 
@@ -63,6 +65,20 @@ def root(request: Request):
         request=request,
         name="index.html",
         context={"active_module": "instance"},
+    )
+
+
+@app.get("/almacenamiento")
+def storage_page(request: Request):
+    """Página del Módulo 3 (Gestión del almacenamiento).
+
+    La plantilla solo contiene la estructura; los datos se cargan desde
+    /api/storage mediante static/js/storage.js.
+    """
+    return templates.TemplateResponse(
+        request=request,
+        name="storage.html",
+        context={"active_module": "storage"},
     )
 
 
