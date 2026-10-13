@@ -1,6 +1,21 @@
-from fastapi import FastAPI
+from pathlib import Path
 
+from fastapi import FastAPI, Request
+from fastapi.templating import Jinja2Templates
+from fastapi.staticfiles import StaticFiles
+
+from app.modules.audit.router import router as audit_router
+from app.modules.backup.router import router as backup_router
+from app.modules.connections.router import router as connections_router
 from app.modules.instance.router import router as instance_router
+from app.modules.storage.router import router as storage_router
+
+
+BASE_DIR = Path(__file__).resolve().parent
+
+templates = Jinja2Templates(
+    directory=str(BASE_DIR / "templates")
+)
 
 
 app = FastAPI(
@@ -9,9 +24,87 @@ app = FastAPI(
     version="0.1.0",
 )
 
+app.mount(
+    "/static",
+    StaticFiles(directory=str(BASE_DIR / "static")),
+    name="static",
+)
+
+
+@app.middleware("http")
+async def revalidate_static_files(request: Request, call_next):
+    """Obliga al navegador a revalidar CSS y JavaScript en cada carga.
+
+    Sin esta cabecera el navegador puede seguir usando una copia vieja de un
+    archivo después de un `git pull`. Con "no-cache" pregunta al servidor si
+    cambió: si no cambió responde 304 (sin volver a descargarlo), y si cambió
+    entrega la versión nueva.
+    """
+    response = await call_next(request)
+
+    if request.url.path.startswith("/static/"):
+        response.headers["Cache-Control"] = "no-cache"
+
+    return response
+
+app.include_router(connections_router)
 app.include_router(instance_router)
+app.include_router(storage_router)
+app.include_router(backup_router)
+app.include_router(audit_router)
 
 
 @app.get("/")
-def root():
-    return {"message": "DBA Monitor funcionando"}
+def root(request: Request):
+    """Página del Módulo 1 (Estado general de la instancia).
+
+    `active_module` le indica a base.html qué enlace del menú lateral
+    debe marcarse como activo.
+    """
+    return templates.TemplateResponse(
+        request=request,
+        name="index.html",
+        context={"active_module": "instance"},
+    )
+
+
+@app.get("/almacenamiento")
+def storage_page(request: Request):
+    """Página del Módulo 3 (Gestión del almacenamiento).
+
+    La plantilla solo contiene la estructura; los datos se cargan desde
+    /api/storage mediante static/js/storage.js.
+    """
+    return templates.TemplateResponse(
+        request=request,
+        name="storage.html",
+        context={"active_module": "storage"},
+    )
+
+
+@app.get("/respaldos")
+def backup_page(request: Request):
+    """Página del Módulo 4 (Respaldo y recuperación).
+
+    La plantilla solo contiene la estructura; los datos se cargan desde
+    /api/backup mediante static/js/backup.js.
+    """
+    return templates.TemplateResponse(
+        request=request,
+        name="backup.html",
+        context={"active_module": "backup"},
+    )
+
+
+@app.get("/auditoria")
+def audit_page(request: Request):
+    """Página del Módulo 5 (Auditoría).
+
+    La plantilla solo contiene la estructura; los datos se cargan desde
+    /api/audit/* mediante static/js/audit.js.
+    """
+    return templates.TemplateResponse(
+        request=request,
+        name="audit.html",
+        context={"active_module": "audit"},
+    )

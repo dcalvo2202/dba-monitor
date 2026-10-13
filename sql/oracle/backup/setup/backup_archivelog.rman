@@ -1,0 +1,23 @@
+# ==============================================================================
+#  Archivo   : sql/oracle/backup/setup/backup_archivelog.rman
+#  Módulo    : 4 - Respaldo y recuperación (datos de prueba)
+#  Propósito : Respaldar los archived redo logs generados desde el último
+#              respaldo.
+#  Ejecutar  : Lo ejecuta demo_backups.cmd, o a mano desde la raíz del
+#              proyecto:
+#                  rman target / cmdfile=sql\oracle\backup\setup\backup_archivelog.rman
+#
+#  Los archived logs son los que permiten recuperar los cambios hechos
+#  DESPUÉS del último respaldo de la base. Sin respaldarlos, perder el
+#  disco de la FRA significaría perder esos cambios.
+#
+#  ARCHIVE LOG CURRENT cierra el redo log en uso y lo archiva, para que el
+#  respaldo incluya hasta el último cambio confirmado.
+#  NOT BACKED UP 1 TIMES evita volver a copiar logs que ya tienen respaldo.
+# ==============================================================================
+
+ALTER SYSTEM ARCHIVE LOG CURRENT;
+
+BACKUP AS COMPRESSED BACKUPSET
+    ARCHIVELOG ALL NOT BACKED UP 1 TIMES
+    TAG 'DBAMON_ARCHIVELOG';

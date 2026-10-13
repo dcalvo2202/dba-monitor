@@ -1,0 +1,203 @@
+{#
+    Módulo 4 - Respaldo y recuperación.
+
+    Hereda la estructura común de base.html. Presenta el riesgo de no poder
+    recuperar la base de datos, el último respaldo exitoso, la configuración
+    de recuperación (ARCHIVELOG y Fast Recovery Area) y el historial de
+    trabajos RMAN. Los datos se cargan desde /api/backup mediante
+    static/js/backup.js; esta plantilla solo define la estructura vacía.
+#}
+{% extends "base.html" %}
+{% from "_icons.html" import icon %}
+
+{% block page_title %}Respaldos · DBA Monitor{% endblock %}
+
+{% block eyebrow %}Módulo 4{% endblock %}
+
+{% block heading %}Respaldo y recuperación{% endblock %}
+
+{% block description %}Historial de respaldos RMAN y capacidad de recuperación de la base de datos.{% endblock %}
+
+{% block content %}
+
+<!-- Resumen: indicadores principales del módulo -->
+<section class="summary-grid">
+
+    <article class="summary-card">
+        <span class="summary-icon">{{ icon("shield") }}</span>
+        <span class="summary-label">Riesgo de recuperación</span>
+        <strong id="summary-risk" class="status-badge">—</strong>
+        <span id="summary-risk-detail" class="summary-secondary">Evaluación de los respaldos</span>
+    </article>
+
+    <article class="summary-card">
+        <span class="summary-icon">{{ icon("clock") }}</span>
+        <span class="summary-label">Último respaldo exitoso</span>
+        <strong id="summary-last-backup">—</strong>
+        <span id="summary-last-backup-detail" class="summary-secondary">Respaldo de la base completa</span>
+    </article>
+
+    <article class="summary-card">
+        <span class="summary-icon">{{ icon("archive") }}</span>
+        <span class="summary-label">Modo de archivado</span>
+        <strong id="summary-log-mode" class="status-badge">—</strong>
+        <span id="summary-log-mode-detail" class="summary-secondary">Redo logs archivados</span>
+    </article>
+
+    <article class="summary-card">
+        <span class="summary-icon">{{ icon("hard-drive") }}</span>
+        <span class="summary-label">Fast Recovery Area</span>
+        <strong id="summary-fra">—</strong>
+        <span id="summary-fra-detail" class="summary-secondary">Espacio de respaldos</span>
+    </article>
+
+</section>
+
+<!-- Interpretación de riesgo: hallazgos explicados, del más grave al menos grave -->
+<section class="panel" aria-labelledby="assessment-title">
+    <div class="panel-header">
+        <div>
+            <h2 id="assessment-title">Interpretación de riesgo</h2>
+            <p id="assessment-summary">Evaluando los respaldos...</p>
+        </div>
+    </div>
+
+    <ul id="assessment-findings" class="risk-list assessment-list" aria-live="polite"></ul>
+</section>
+
+<section class="content-grid">
+
+    <!-- Último respaldo exitoso de cada categoría -->
+    <article class="panel">
+        <div class="panel-header">
+            <div>
+                <h2>Último respaldo exitoso</h2>
+                <p>Respaldo más reciente que terminó correctamente.</p>
+            </div>
+        </div>
+
+        <h3 class="table-title">Base de datos completa</h3>
+        <dl class="details-list">
+            <div><dt>Tipo</dt><dd id="last-db-type">—</dd></div>
+            <div><dt>Finalizó</dt><dd id="last-db-end">—</dd></div>
+            <div><dt>Duración</dt><dd id="last-db-duration">—</dd></div>
+            <div><dt>Tamaño generado</dt><dd id="last-db-size">—</dd></div>
+        </dl>
+
+        <h3 class="table-title">Archived logs</h3>
+        <dl class="details-list">
+            <div><dt>Finalizó</dt><dd id="last-arch-end">—</dd></div>
+            <div><dt>Tamaño generado</dt><dd id="last-arch-size">—</dd></div>
+        </dl>
+    </article>
+
+    <!-- Configuración de recuperación: ARCHIVELOG y Fast Recovery Area -->
+    <article class="panel">
+        <div class="panel-header">
+            <div>
+                <h2>Configuración de recuperación</h2>
+                <p>Modo de archivado y área donde RMAN guarda los respaldos.</p>
+            </div>
+        </div>
+
+        <dl class="details-list">
+            <div><dt>Base de datos</dt><dd id="config-database">—</dd></div>
+            <div><dt>Contenedor consultado</dt><dd id="config-container">—</dd></div>
+            <div><dt>Modo de archivado</dt><dd id="config-log-mode">—</dd></div>
+            <div><dt>Ubicación de la FRA</dt><dd id="config-fra-path" class="cell-note">—</dd></div>
+            <div><dt>Límite de la FRA</dt><dd id="config-fra-limit">—</dd></div>
+            <div><dt>Espacio recuperable</dt><dd id="config-fra-reclaimable">—</dd></div>
+            <div><dt>Archivos en la FRA</dt><dd id="config-fra-files">—</dd></div>
+        </dl>
+
+        <div class="memory-utilization">
+            <div class="utilization-header">
+                <span>Uso real de la FRA</span>
+                <strong id="fra-percent">—%</strong>
+            </div>
+
+            <div class="progress-track">
+                <div
+                    id="fra-progress"
+                    class="progress-bar"
+                    role="progressbar"
+                    aria-label="Uso real de la Fast Recovery Area"
+                    aria-valuemin="0"
+                    aria-valuemax="100"
+                    aria-valuenow="0"
+                ></div>
+            </div>
+        </div>
+    </article>
+
+</section>
+
+<!-- Gráficos del historial. Los dibuja static/js/charts.js. -->
+<section class="chart-grid" aria-label="Panorama de los respaldos">
+
+    <article class="panel chart-panel">
+        <div class="panel-header">
+            <div>
+                <h2>Resultado de los trabajos</h2>
+                <p>Proporción de respaldos completados, con advertencias y fallidos.</p>
+            </div>
+        </div>
+        <div id="jobs-result-chart" class="chart-body">
+            <p class="viz-empty">Cargando información...</p>
+        </div>
+    </article>
+
+    <article class="panel chart-panel">
+        <div class="panel-header">
+            <div>
+                <h2>Respaldos que más espacio ocupan</h2>
+                <p>Tamaño generado por cada trabajo (después de la compresión).</p>
+            </div>
+        </div>
+        <div id="backup-size-chart" class="chart-body">
+            <p class="viz-empty">Cargando información...</p>
+        </div>
+    </article>
+
+</section>
+
+<!-- Historial de trabajos RMAN -->
+<section class="panel" aria-labelledby="history-title">
+    <div class="panel-header">
+        <div>
+            <h2 id="history-title">Historial de respaldos</h2>
+            <p id="history-description">Trabajos RMAN del más reciente al más antiguo.</p>
+        </div>
+    </div>
+
+    <p id="history-truncated" class="notice" hidden></p>
+
+    <div class="table-wrapper" role="region" aria-label="Historial de respaldos" tabindex="0">
+        <table>
+            <thead>
+                <tr>
+                    <th>Inicio</th>
+                    <th>Tipo</th>
+                    <th>Estado</th>
+                    <th>Duración</th>
+                    <th>Leído</th>
+                    <th>Generado</th>
+                    <th>Compresión</th>
+                    <th>Destino</th>
+                </tr>
+            </thead>
+
+            <tbody id="history-table-body">
+                <tr><td colspan="8">Cargando información...</td></tr>
+            </tbody>
+        </table>
+    </div>
+</section>
+
+{% endblock %}
+
+{% block scripts %}
+    <script src="{{ url_for('static', path='js/common.js') }}"></script>
+    <script src="{{ url_for('static', path='js/charts.js') }}"></script>
+    <script src="{{ url_for('static', path='js/backup.js') }}"></script>
+{% endblock %}

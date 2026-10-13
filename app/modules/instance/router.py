@@ -1,7 +1,6 @@
 from fastapi import APIRouter, HTTPException
 
-from app.modules.instance.service import get_instance_status
-
+from app.modules.instance.service import get_instance_overview
 
 router = APIRouter(
     prefix="/api/instance",
@@ -11,7 +10,7 @@ router = APIRouter(
 
 @router.get("")
 def read_instance_status():
-    instance_status = get_instance_status()
+    instance_status = get_instance_overview()
 
     if instance_status is None:
         raise HTTPException(
