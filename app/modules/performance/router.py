@@ -4,6 +4,7 @@ from app.modules.performance.service import (
     get_active_sessions_data,
     get_blocked_sessions_data,
     get_top_sql_data,
+    get_query_times_data,
 )
 
 
@@ -26,3 +27,8 @@ def read_blocked_sessions():
 @router.get("/top-sql")
 def read_top_sql():
     return get_top_sql_data()
+
+
+@router.get("/query-times")
+def read_query_times():
+    return get_query_times_data()

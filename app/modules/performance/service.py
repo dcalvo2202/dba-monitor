@@ -2,6 +2,7 @@ from app.modules.performance.repository import (
     get_active_sessions,
     get_blocked_sessions,
     get_top_sql,
+    get_query_times,
 )
 
 
@@ -67,4 +68,20 @@ def get_top_sql_data():
             }
         )
 
+    return queries
+
+
+def get_query_times_data():
+    rows = get_query_times()
+    queries = []
+    for row in rows:
+        queries.append(
+            {
+                "sql_id": row[0],
+                "sql_text": row[1],
+                "executions": row[2],
+                "total_elapsed_seconds": row[3],
+                "avg_elapsed_seconds": row[4],
+            }
+        )
     return queries
