@@ -14,6 +14,7 @@ ACTIVE_SESSIONS_SQL_FILE = SQL_DIR / "get_active_sessions.sql"
 BLOCKED_SESSIONS_SQL_FILE = SQL_DIR / "get_blocked_sessions.sql"
 TOP_SQL_FILE = SQL_DIR / "get_top_sql.sql"
 QUERY_TIMES_SQL_FILE = SQL_DIR / "get_query_times.sql"
+RESOURCE_USAGE_SQL_FILE = SQL_DIR / "get_resource_usage.sql"
 
 
 def get_active_sessions():
@@ -75,6 +76,25 @@ def get_top_sql():
 
 def get_query_times():
     query = QUERY_TIMES_SQL_FILE.read_text(encoding="utf-8")
+
+    connection = get_connection()
+
+    try:
+        cursor = connection.cursor()
+
+        try:
+            cursor.execute(query)
+            return cursor.fetchall()
+
+        finally:
+            cursor.close()
+
+    finally:
+        connection.close()
+
+
+def get_resource_usage():
+    query = RESOURCE_USAGE_SQL_FILE.read_text(encoding="utf-8")
 
     connection = get_connection()
 

@@ -5,6 +5,7 @@ from app.modules.performance.service import (
     get_blocked_sessions_data,
     get_top_sql_data,
     get_query_times_data,
+    get_resource_usage_data,
 )
 
 
@@ -32,3 +33,8 @@ def read_top_sql():
 @router.get("/query-times")
 def read_query_times():
     return get_query_times_data()
+
+
+@router.get("/resource-usage")
+def read_resource_usage():
+    return get_resource_usage_data()

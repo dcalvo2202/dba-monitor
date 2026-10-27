@@ -3,6 +3,7 @@ from app.modules.performance.repository import (
     get_blocked_sessions,
     get_top_sql,
     get_query_times,
+    get_resource_usage,
 )
 
 
@@ -85,3 +86,22 @@ def get_query_times_data():
             }
         )
     return queries
+
+
+def get_resource_usage_data():
+    rows = get_resource_usage()
+    sessions = []
+    for row in rows:
+        sessions.append(
+            {
+                "sid": row[0],
+                "serial_number": row[1],
+                "username": row[2],
+                "status": row[3],
+                "program": row[4],
+                "process_id": row[5],
+                "cpu_seconds": row[6],
+                "pga_used_mb": row[7],
+            }
+        )
+    return sessions
