@@ -23,6 +23,7 @@ uvicorn app.main:app --reload
 ## Páginas
 
 - GET /                Módulo 1 - Estado general de la instancia
+- GET /rendimiento     Módulo 2 - Rendimiento de Oracle
 - GET /almacenamiento  Módulo 3 - Gestión del almacenamiento
 - GET /respaldos       Módulo 4 - Respaldo y recuperación
 - GET /auditoria       Módulo 5 - Auditoría
@@ -36,6 +37,10 @@ La documentación interactiva de todos los endpoints está en `/docs`.
 | 1 - Instancia | GET /api/instance | Estado, memoria y PDBs de la instancia |
 | 1 - Instancia | GET /api/connections | Perfiles de conexión disponibles y el activo (sin contraseñas) |
 | 1 - Instancia | PUT /api/connections/active | Cambia la instancia monitoreada (`{"name": "cdb_root"}`); valida la conexión antes |
+| 2 - Rendimiento | GET /api/performance/sessions, /blocked-sessions | Sesiones activas y sesiones bloqueadas |
+| 2 - Rendimiento | GET /api/performance/top-sql | SQL de mayor consumo de CPU |
+| 2 - Rendimiento | GET /api/performance/query-times | Tiempo total y promedio de ejecución SQL |
+| 2 - Rendimiento | GET /api/performance/resource-usage | CPU acumulada y PGA usada por sesión |
 | 3 - Almacenamiento | GET /api/storage | Tamaño, tablespaces, archivos de datos, objetos de mayor tamaño y crecimiento (`?include_oracle=true&max_objects=20&days=90`) |
 | 3 - Almacenamiento | GET /api/storage/tablespaces, /database-size, /datafiles, /large-objects, /growth | Cada sección por separado |
 | 3 - Almacenamiento | POST /api/storage/snapshot | Registra una medición en el historial (procedimiento `DBA_MONITOR_HIST.RECORD_STORAGE_SNAPSHOT`) |
@@ -49,4 +54,5 @@ La documentación interactiva de todos los endpoints está en `/docs`.
 ## Documentación
 
 - [Configuración del entorno local](docs/configuracion-local.md)
+- [Módulo 2 - Rendimiento de Oracle](docs/modulo-2-rendimiento.md)
 - [Flujo de trabajo con Git y GitHub](docs/flujo-git.md)
