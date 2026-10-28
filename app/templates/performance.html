@@ -1,0 +1,168 @@
+{% extends "base.html" %}
+
+{% block page_title %}Rendimiento · DBA Monitor{% endblock %}
+{% block eyebrow %}Módulo 2{% endblock %}
+{% block heading %}Rendimiento de Oracle{% endblock %}
+{% block description %}Actividad, esperas, SQL y recursos de la instancia seleccionada.{% endblock %}
+
+{% block content %}
+    <section class="summary-grid" aria-label="Resumen de rendimiento">
+        <article class="summary-card">
+            <span class="summary-label">Sesiones activas</span>
+            <strong id="active-session-count">—</strong>
+            <span class="summary-secondary">Sesiones de usuario con estado ACTIVE</span>
+        </article>
+        <article class="summary-card">
+            <span class="summary-label">Sesiones bloqueadas</span>
+            <strong id="blocked-session-count">—</strong>
+            <span class="summary-secondary">Esperando por una sesión identificada</span>
+        </article>
+        <article class="summary-card">
+            <span class="summary-label">SQL por CPU</span>
+            <strong id="top-sql-count">—</strong>
+            <span class="summary-secondary">SQL_ID agregados, máximo 10</span>
+        </article>
+        <article class="summary-card">
+            <span class="summary-label">Sesiones con recursos</span>
+            <strong id="resource-session-count">—</strong>
+            <span class="summary-secondary">CPU acumulada y PGA usada</span>
+        </article>
+    </section>
+
+    <section class="panel">
+        <div class="panel-header">
+            <div>
+                <h2>Sesiones activas</h2>
+                <p>ACTIVE indica que Oracle considera la sesión activa en este momento; puede estar ejecutando o esperando un recurso.</p>
+            </div>
+        </div>
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>SID</th>
+                        <th>Usuario</th>
+                        <th>Estado</th>
+                        <th>Equipo</th>
+                        <th>Programa</th>
+                        <th>Inicio de sesión</th>
+                    </tr>
+                </thead>
+                <tbody id="active-sessions-body">
+                    <tr><td colspan="6" class="table-message">Cargando sesiones...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <section class="panel">
+        <div class="panel-header">
+            <div>
+                <h2>Sesiones bloqueadas</h2>
+                <p>Sesiones que esperan por otra sesión. El identificador del bloqueador se muestra cuando Oracle puede determinarlo.</p>
+            </div>
+        </div>
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>SID</th>
+                        <th>Usuario</th>
+                        <th>Instancia bloqueadora</th>
+                        <th>SID bloqueador</th>
+                        <th>Estado del bloqueador</th>
+                        <th>Evento</th>
+                        <th>Espera (s)</th>
+                    </tr>
+                </thead>
+                <tbody id="blocked-sessions-body">
+                    <tr><td colspan="7" class="table-message">Cargando sesiones...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <section class="panel">
+        <div class="panel-header">
+            <div>
+                <h2>SQL de mayor consumo de CPU</h2>
+                <p>CPU y tiempo transcurrido acumulados desde que las estadísticas del cursor están en memoria. Se agrupan los cursores hijos por SQL_ID.</p>
+            </div>
+        </div>
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>SQL ID</th>
+                        <th>SQL (fragmento)</th>
+                        <th>Ejecuciones</th>
+                        <th>CPU acumulada (s)</th>
+                        <th>Tiempo transcurrido (s)</th>
+                        <th>Lecturas de buffer</th>
+                        <th>Lecturas de disco</th>
+                    </tr>
+                </thead>
+                <tbody id="top-sql-body">
+                    <tr><td colspan="7" class="table-message">Cargando consultas...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <section class="panel">
+        <div class="panel-header">
+            <div>
+                <h2>Tiempos de ejecución SQL</h2>
+                <p>El promedio es tiempo transcurrido acumulado dividido por ejecuciones registradas; son métricas del cursor en memoria, no una medición en vivo.</p>
+            </div>
+        </div>
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>SQL ID</th>
+                        <th>SQL (fragmento)</th>
+                        <th>Ejecuciones</th>
+                        <th>Total transcurrido (s)</th>
+                        <th>Promedio por ejecución (s)</th>
+                    </tr>
+                </thead>
+                <tbody id="query-times-body">
+                    <tr><td colspan="5" class="table-message">Cargando tiempos...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <section class="panel">
+        <div class="panel-header">
+            <div>
+                <h2>CPU y memoria por sesión</h2>
+                <p>CPU es acumulada desde el inicio de la sesión, no una tasa instantánea. PGA usada es memoria privada actualmente utilizada por el proceso Oracle.</p>
+            </div>
+        </div>
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>SID</th>
+                        <th>Usuario</th>
+                        <th>Estado</th>
+                        <th>Programa</th>
+                        <th>Proceso Oracle</th>
+                        <th>CPU acumulada (s)</th>
+                        <th>PGA usada (MiB)</th>
+                    </tr>
+                </thead>
+                <tbody id="resource-usage-body">
+                    <tr><td colspan="7" class="table-message">Cargando recursos...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+{% endblock %}
+
+{% block scripts %}
+    <script src="{{ url_for('static', path='js/common.js') }}"></script>
+    <script src="{{ url_for('static', path='js/performance.js') }}"></script>
+{% endblock %}

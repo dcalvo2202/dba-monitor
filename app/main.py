@@ -8,6 +8,7 @@ from app.modules.audit.router import router as audit_router
 from app.modules.backup.router import router as backup_router
 from app.modules.connections.router import router as connections_router
 from app.modules.instance.router import router as instance_router
+from app.modules.performance.router import router as performance_router
 from app.modules.storage.router import router as storage_router
 
 
@@ -49,6 +50,7 @@ async def revalidate_static_files(request: Request, call_next):
 
 app.include_router(connections_router)
 app.include_router(instance_router)
+app.include_router(performance_router)
 app.include_router(storage_router)
 app.include_router(backup_router)
 app.include_router(audit_router)
@@ -65,6 +67,16 @@ def root(request: Request):
         request=request,
         name="index.html",
         context={"active_module": "instance"},
+    )
+
+
+@app.get("/rendimiento")
+def performance_page(request: Request):
+    """Página del Módulo 2 (Rendimiento de Oracle)."""
+    return templates.TemplateResponse(
+        request=request,
+        name="performance.html",
+        context={"active_module": "performance"},
     )
 
 
