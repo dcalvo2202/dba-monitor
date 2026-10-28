@@ -1,0 +1,223 @@
+{#
+    Módulo 6 — Mantenimiento Preventivo.
+    Hereda la estructura visual y los estilos de base.html.
+    Los datos se obtienen mediante los endpoints /api/maintenance/.
+#}
+{% extends "base.html" %}
+
+{% block page_title %}
+    Mantenimiento Preventivo · DBA Monitor
+{% endblock %}
+
+{% block eyebrow %}Módulo 6{% endblock %}
+
+{% block heading %}
+    Mantenimiento Preventivo
+{% endblock %}
+
+{% block description %}
+    Actualización de estadísticas, detección y recompilación
+    de objetos inválidos en Oracle Database.
+{% endblock %}
+
+{% block content %}
+
+    <!-- ESTADO GENERAL -->
+    <p
+        id="maintenance-status"
+        class="panel-message"
+        role="status"
+        aria-live="polite"
+    >
+        Cargando información de mantenimiento...
+    </p>
+
+    <!-- TARJETAS DE RESUMEN -->
+    <section
+        class="summary-grid"
+        aria-label="Resumen de mantenimiento"
+    >
+
+        <article class="summary-card">
+            <span class="summary-label">
+                Tablas analizadas
+            </span>
+
+            <strong id="maintenance-total-tables">
+                —
+            </strong>
+
+            <span class="summary-secondary">
+                Tablas disponibles para consultar
+            </span>
+        </article>
+
+        <article class="summary-card">
+            <span class="summary-label">
+                Estadísticas desactualizadas
+            </span>
+
+            <strong id="maintenance-stale-stats">
+                —
+            </strong>
+
+            <span class="summary-secondary">
+                Tablas marcadas como STALE
+            </span>
+        </article>
+
+        <article class="summary-card">
+            <span class="summary-label">
+                Objetos inválidos
+            </span>
+
+            <strong id="maintenance-invalid-count">
+                —
+            </strong>
+
+            <span class="summary-secondary">
+                Objetos que requieren revisión
+            </span>
+        </article>
+
+        <article class="summary-card">
+            <span class="summary-label">
+                Última operación
+            </span>
+
+            <strong id="maintenance-last-operation">
+                —
+            </strong>
+
+            <span class="summary-secondary">
+                Resultado del último mantenimiento
+            </span>
+        </article>
+
+    </section>
+
+    <!-- ESTADÍSTICAS DE TABLAS -->
+    <section
+        class="panel pdb-panel"
+        aria-labelledby="maintenance-statistics-title"
+    >
+
+        <div class="panel-header">
+            <h2 id="maintenance-statistics-title">
+                Estadísticas de tablas
+            </h2>
+
+            <p>
+                Consulta las estadísticas del optimizador de Oracle
+                y actualízalas cuando sea necesario.
+            </p>
+        </div>
+
+        <div class="table-wrapper">
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Propietario</th>
+                        <th>Tabla</th>
+                        <th>Filas estimadas</th>
+                        <th>Bloques</th>
+                        <th>Último análisis</th>
+                        <th>Estado</th>
+                        <th>Acción</th>
+                    </tr>
+                </thead>
+
+                <tbody id="maintenance-statistics-body">
+                    <tr>
+                        <td colspan="7">
+                            Cargando estadísticas...
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+
+        </div>
+
+    </section>
+
+    <!-- OBJETOS INVÁLIDOS -->
+    <section
+        class="panel pdb-panel"
+        aria-labelledby="maintenance-invalid-title"
+    >
+
+        <div class="panel-header">
+            <h2 id="maintenance-invalid-title">
+                Objetos inválidos
+            </h2>
+
+            <p>
+                Identifica objetos con problemas de compilación
+                y solicita su recompilación.
+            </p>
+        </div>
+
+        <div class="table-wrapper">
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Propietario</th>
+                        <th>Objeto</th>
+                        <th>Tipo</th>
+                        <th>Estado</th>
+                        <th>Última modificación</th>
+                        <th>Acción</th>
+                    </tr>
+                </thead>
+
+                <tbody id="maintenance-invalid-body">
+                    <tr>
+                        <td colspan="6">
+                            Buscando objetos inválidos...
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+
+        </div>
+
+    </section>
+
+    <!-- RESULTADOS DE MANTENIMIENTO -->
+    <section
+        class="panel pdb-panel"
+        aria-labelledby="maintenance-results-title"
+    >
+
+        <div class="panel-header">
+            <h2 id="maintenance-results-title">
+                Resultado de operaciones
+            </h2>
+
+            <p>
+                Información sobre las operaciones de mantenimiento
+                ejecutadas durante esta sesión.
+            </p>
+        </div>
+
+        <div
+            id="maintenance-operation-result"
+            class="panel-message"
+            role="status"
+            aria-live="polite"
+        >
+            Todavía no se han ejecutado operaciones
+            de mantenimiento.
+        </div>
+
+    </section>
+
+{% endblock %}
+
+{% block scripts %}
+    <script
+        src="{{ url_for('static', path='js/maintenance.js') }}"
+    ></script>
+{% endblock %}
