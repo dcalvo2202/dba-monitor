@@ -1,0 +1,24 @@
+/*
+Módulo 2 - Rendimiento.
+Ejecutar como SYS AS SYSDBA. Los permisos se limitan a lectura y se aplican
+en XEPDB1, donde se encuentra el usuario local DBA_MONITOR.
+*/
+WHENEVER SQLERROR EXIT SQL.SQLCODE
+WHENEVER OSERROR EXIT FAILURE
+
+ALTER SESSION SET CONTAINER = XEPDB1;
+SHOW CON_NAME
+
+GRANT SELECT ON SYS.V_$SESSION  TO DBA_MONITOR;
+GRANT SELECT ON SYS.V_$SQL      TO DBA_MONITOR;
+GRANT SELECT ON SYS.V_$PROCESS  TO DBA_MONITOR;
+GRANT SELECT ON SYS.V_$SESSTAT  TO DBA_MONITOR;
+GRANT SELECT ON SYS.V_$STATNAME TO DBA_MONITOR;
+
+SELECT table_name, privilege
+FROM   dba_tab_privs
+WHERE  grantee = 'DBA_MONITOR'
+AND    table_name IN (
+           'V_$SESSION', 'V_$SQL', 'V_$PROCESS', 'V_$SESSTAT', 'V_$STATNAME'
+       )
+ORDER  BY table_name;
