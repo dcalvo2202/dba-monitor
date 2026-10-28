@@ -9,6 +9,8 @@ from app.modules.audit.router import router as audit_router
 from app.modules.connections.router import router as connections_router
 from app.modules.instance.router import router as instance_router
 from app.modules.storage.router import router as storage_router
+from app.modules.maintenance.router import router as maintenance_router
+
 
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -51,6 +53,7 @@ app.include_router(connections_router)
 app.include_router(instance_router)
 app.include_router(audit_router)
 app.include_router(storage_router)
+app.include_router(maintenance_router)
 
 @app.get("/")
 def root(request: Request):
@@ -85,4 +88,15 @@ def storage_page(request: Request):
         request=request,
         name="storage.html",
         context={}
+    )
+
+@app.get("/mantenimiento", include_in_schema=False)
+def maintenance_page(request: Request):
+    """
+    Página del módulo 6: Mantenimiento Preventivo.
+    """
+    return templates.TemplateResponse(
+        request=request,
+        name="maintenance.html",
+        context={"active_module": "maintenance"}
     )
