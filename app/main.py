@@ -8,6 +8,7 @@ from app.modules.audit.router import router as audit_router
 from app.modules.backup.router import router as backup_router
 from app.modules.connections.router import router as connections_router
 from app.modules.instance.router import router as instance_router
+from app.modules.maintenance.router import router as maintenance_router
 from app.modules.performance.router import router as performance_router
 from app.modules.storage.router import router as storage_router
 
@@ -48,21 +49,19 @@ async def revalidate_static_files(request: Request, call_next):
 
     return response
 
+
 app.include_router(connections_router)
 app.include_router(instance_router)
 app.include_router(performance_router)
 app.include_router(storage_router)
 app.include_router(backup_router)
 app.include_router(audit_router)
+app.include_router(maintenance_router)
 
 
 @app.get("/")
 def root(request: Request):
-    """Página del Módulo 1 (Estado general de la instancia).
-
-    `active_module` le indica a base.html qué enlace del menú lateral
-    debe marcarse como activo.
-    """
+    """Página del Módulo 1 (Estado general de la instancia)."""
     return templates.TemplateResponse(
         request=request,
         name="index.html",
@@ -82,11 +81,7 @@ def performance_page(request: Request):
 
 @app.get("/almacenamiento")
 def storage_page(request: Request):
-    """Página del Módulo 3 (Gestión del almacenamiento).
-
-    La plantilla solo contiene la estructura; los datos se cargan desde
-    /api/storage mediante static/js/storage.js.
-    """
+    """Página del Módulo 3 (Gestión del almacenamiento)."""
     return templates.TemplateResponse(
         request=request,
         name="storage.html",
@@ -96,11 +91,7 @@ def storage_page(request: Request):
 
 @app.get("/respaldos")
 def backup_page(request: Request):
-    """Página del Módulo 4 (Respaldo y recuperación).
-
-    La plantilla solo contiene la estructura; los datos se cargan desde
-    /api/backup mediante static/js/backup.js.
-    """
+    """Página del Módulo 4 (Respaldo y recuperación)."""
     return templates.TemplateResponse(
         request=request,
         name="backup.html",
@@ -110,13 +101,19 @@ def backup_page(request: Request):
 
 @app.get("/auditoria")
 def audit_page(request: Request):
-    """Página del Módulo 5 (Auditoría).
-
-    La plantilla solo contiene la estructura; los datos se cargan desde
-    /api/audit/* mediante static/js/audit.js.
-    """
+    """Página del Módulo 5 (Auditoría)."""
     return templates.TemplateResponse(
         request=request,
         name="audit.html",
         context={"active_module": "audit"},
+    )
+
+
+@app.get("/mantenimiento")
+def maintenance_page(request: Request):
+    """Página del Módulo 6 (Mantenimiento preventivo)."""
+    return templates.TemplateResponse(
+        request=request,
+        name="maintenance.html",
+        context={"active_module": "maintenance"},
     )
