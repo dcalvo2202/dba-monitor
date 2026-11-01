@@ -4,6 +4,7 @@ SELECT
     object_type,
     status,
     last_ddl_time
-FROM all_objects
-WHERE status = 'INVALID'
-ORDER BY owner, object_type, object_name
+FROM dba_objects
+WHERE owner = 'MAINT_DEMO'
+  AND status = 'INVALID'
+ORDER BY object_type, object_name

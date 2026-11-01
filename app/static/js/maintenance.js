@@ -325,14 +325,6 @@ async function maintenanceUpdateStatistics(owner, tableName) {
         return;
     }
 
-    const confirmed = window.confirm(
-        `¿Deseas actualizar las estadísticas de ${owner}.${tableName}?`
-    );
-
-    if (!confirmed) {
-        return;
-    }
-
     maintenanceState.busy = true;
     maintenanceSetStatus("Actualizando estadísticas...");
     maintenanceRenderStatistics();
@@ -396,14 +388,6 @@ async function maintenanceRecompileObject(
         return;
     }
 
-    const confirmed = window.confirm(
-        `¿Deseas recompilar ${owner}.${objectName} (${objectType})?`
-    );
-
-    if (!confirmed) {
-        return;
-    }
-
     maintenanceState.busy = true;
     maintenanceSetStatus("Recompilando objeto...");
     maintenanceRenderStatistics();
@@ -460,33 +444,69 @@ async function maintenanceRecompileObject(
 // ==========================================
 
 async function maintenanceRefresh() {
-    maintenanceSetStatus("Consultando información de Oracle...");
-
-    const results = await Promise.allSettled([
-        maintenanceLoadStatistics(),
-        maintenanceLoadInvalidObjects()
-    ]);
-
-    const errors = results
-        .filter(result => result.status === "rejected")
-        .map(result => result.reason.message);
-
-    if (errors.length > 0) {
-        maintenanceSetStatus(
-            "No fue posible cargar toda la información."
-        );
-
-        maintenanceShowMessage(
-            errors.join(" | "),
-            true
-        );
-
-        return;
-    }
-
     maintenanceSetStatus(
-        "Información de mantenimiento actualizada."
+        "Consultando información de Oracle..."
     );
+
+    setConnectionState(
+        "is-loading",
+        "Actualizando..."
+    );
+
+    setRefreshState(true);
+
+    try {
+        const results = await Promise.allSettled([
+            maintenanceLoadStatistics(),
+            maintenanceLoadInvalidObjects()
+        ]);
+
+        const errors = results
+            .filter(
+                result =>
+                    result.status === "rejected"
+            )
+            .map(
+                result =>
+                    result.reason.message
+            );
+
+        if (errors.length > 0) {
+            maintenanceSetStatus(
+                "No fue posible cargar toda la información."
+            );
+
+            maintenanceShowMessage(
+                errors.join(" | "),
+                true
+            );
+
+            setConnectionState(
+                errors.length === results.length
+                    ? "is-error"
+                    : "is-warning",
+                errors.length === results.length
+                    ? "Sin conexión"
+                    : "Datos parciales"
+            );
+
+            return;
+        }
+
+        maintenanceSetStatus(
+            "Información de mantenimiento actualizada."
+        );
+
+        setConnectionState(
+            "is-ok",
+            "Conectado"
+        );
+
+        updateLastUpdatedTime();
+
+    } finally {
+        setRefreshState(false);
+    }
 }
 
 

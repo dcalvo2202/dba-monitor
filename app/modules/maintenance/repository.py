@@ -1,24 +1,18 @@
 """
 Módulo 6 - Mantenimiento Preventivo.
 
-Responsabilidades:
-- Consultar objetos inválidos.
-- Consultar estadísticas de tablas.
-- Actualizar estadísticas.
-- Recompilar objetos.
-- Verificar resultados.
-
-Utiliza el perfil Oracle activo de DBA Monitor.
+Acceso a datos y operaciones controladas de mantenimiento.
+Las operaciones modificadoras se limitan al esquema MAINT_DEMO.
 """
 
-import re
 from pathlib import Path
 from typing import Any
+
+import oracledb
 
 from app.database.connection import get_connection
 
 
-# Carpeta de consultas SQL del módulo 6.
 SQL_DIR = (
     Path(__file__).resolve().parents[3]
     / "sql"
@@ -26,27 +20,10 @@ SQL_DIR = (
     / "maintenance"
 )
 
-# Tipos de objetos que permitiremos recompilar.
-COMPILE_COMMANDS = {
-    "PROCEDURE": "ALTER PROCEDURE",
-    "FUNCTION": "ALTER FUNCTION",
-    "PACKAGE": "ALTER PACKAGE",
-    "PACKAGE BODY": "ALTER PACKAGE",
-    "TRIGGER": "ALTER TRIGGER",
-    "VIEW": "ALTER VIEW",
-}
-
-# Validación de identificadores Oracle convencionales.
-IDENTIFIER_PATTERN = re.compile(
-    r"^[A-Za-z][A-Za-z0-9_$#]{0,127}$"
-)
+MAINTENANCE_SCHEMA = "MAINT_DEMO"
 
 
 def _load_sql(filename: str) -> str:
-    """
-    Lee una consulta desde sql/oracle/maintenance.
-    """
-
     path = SQL_DIR / filename
 
     if not path.is_file():
@@ -54,19 +31,18 @@ def _load_sql(filename: str) -> str:
             f"No se encontró la consulta SQL: {path}"
         )
 
-    # Evita terminadores SQL*Plus al ejecutar con python-oracledb.
-    return path.read_text(
-        encoding="utf-8"
-    ).strip().removesuffix(";").strip()
+    return (
+        path.read_text(encoding="utf-8")
+        .strip()
+        .removesuffix(";")
+        .strip()
+    )
 
 
-def _fetch_all(filename: str) -> list[dict[str, Any]]:
-    """
-    Ejecuta una consulta SELECT y devuelve diccionarios.
-    """
-
+def _fetch_all(
+    filename: str,
+) -> list[dict[str, Any]]:
     sql = _load_sql(filename)
-
     connection = get_connection()
 
     try:
@@ -88,129 +64,62 @@ def _fetch_all(filename: str) -> list[dict[str, Any]]:
 
 
 def get_invalid_objects() -> list[dict]:
-    """
-    Consulta los objetos inválidos visibles
-    para el usuario conectado.
-    """
-
-    return _fetch_all("get_invalid_objects.sql")
+    return _fetch_all(
+        "get_invalid_objects.sql"
+    )
 
 
 def get_table_statistics() -> list[dict]:
-    """
-    Consulta las estadísticas actuales
-    de las tablas visibles.
-    """
-
-    return _fetch_all("get_table_statistics.sql")
-
-
-def _validate_identifier(value: str) -> str:
-    """
-    Valida identificadores antes de incorporarlos
-    a sentencias DDL.
-    """
-
-    if not isinstance(value, str):
-        raise ValueError("El identificador debe ser texto.")
-
-    value = value.strip().upper()
-
-    if not IDENTIFIER_PATTERN.fullmatch(value):
-        raise ValueError(
-            f"Identificador Oracle no permitido: {value}"
-        )
-
-    return value
-
-
-def _current_schema(cursor) -> str:
-    """
-    Obtiene el usuario de la sesión Oracle.
-    """
-
-    cursor.execute(
-        """
-        SELECT SYS_CONTEXT('USERENV', 'SESSION_USER')
-        FROM dual
-        """
+    return _fetch_all(
+        "get_table_statistics.sql"
     )
-
-    return cursor.fetchone()[0].upper()
 
 
 def update_table_statistics(
     owner: str,
-    table_name: str
+    table_name: str,
 ) -> dict:
-    """
-    Actualiza las estadísticas de una tabla
-    mediante DBMS_STATS.
+    owner = owner.strip().upper()
+    table_name = table_name.strip().upper()
 
-    Solo permite tablas del usuario conectado.
-    """
-
-    owner = _validate_identifier(owner)
-    table_name = _validate_identifier(table_name)
+    if owner != MAINTENANCE_SCHEMA:
+        raise PermissionError(
+            "Solo se permite ejecutar mantenimiento "
+            "sobre el esquema MAINT_DEMO."
+        )
 
     connection = get_connection()
 
     try:
         with connection.cursor() as cursor:
-
-            session_user = _current_schema(cursor)
-
-            if owner != session_user:
-                raise PermissionError(
-                    "Solo se permite actualizar estadísticas "
-                    "de tablas del usuario conectado."
-                )
-
-            cursor.execute(
-                """
-                SELECT COUNT(*)
-                FROM user_tables
-                WHERE table_name = :table_name
-                """,
-                {"table_name": table_name}
-            )
-
-            if cursor.fetchone()[0] == 0:
-                raise ValueError(
-                    f"La tabla {owner}.{table_name} "
-                    "no existe o no es accesible."
-                )
-
             cursor.execute(
                 """
                 BEGIN
-                    DBMS_STATS.GATHER_TABLE_STATS(
-                        ownname => :owner,
-                        tabname => :table_name,
-                        cascade => TRUE
+                    MAINT_DEMO.MAINTENANCE_API.GATHER_TABLE_STATS(
+                        :table_name
                     );
                 END;
                 """,
                 {
-                    "owner": owner,
                     "table_name": table_name
-                }
+                },
             )
 
             cursor.execute(
                 """
                 SELECT last_analyzed
-                FROM user_tab_statistics
-                WHERE table_name = :table_name
+                FROM dba_tab_statistics
+                WHERE owner = 'MAINT_DEMO'
+                  AND table_name = :table_name
                   AND object_type = 'TABLE'
                   AND partition_name IS NULL
                 """,
-                {"table_name": table_name}
+                {
+                    "table_name": table_name
+                },
             )
 
             row = cursor.fetchone()
-
-            connection.commit()
 
             return {
                 "success": True,
@@ -222,13 +131,9 @@ def update_table_statistics(
                     else None
                 ),
                 "message": (
-                    "Actualización de estadísticas ejecutada."
-                )
+                    "Estadísticas actualizadas correctamente."
+                ),
             }
-
-    except Exception:
-        connection.rollback()
-        raise
 
     finally:
         connection.close()
@@ -237,86 +142,71 @@ def update_table_statistics(
 def recompile_object(
     owner: str,
     object_name: str,
-    object_type: str
+    object_type: str,
 ) -> dict:
-    """
-    Recompila un objeto inválido del usuario conectado.
-
-    Verifica su estado después de ejecutar COMPILE.
-    """
-
-    owner = _validate_identifier(owner)
-    object_name = _validate_identifier(object_name)
+    owner = owner.strip().upper()
+    object_name = object_name.strip().upper()
     object_type = object_type.strip().upper()
 
-    if object_type not in COMPILE_COMMANDS:
-        raise ValueError(
-            f"Tipo de objeto no admitido: {object_type}"
+    if owner != MAINTENANCE_SCHEMA:
+        raise PermissionError(
+            "Solo se permite recompilar objetos "
+            "del esquema MAINT_DEMO."
         )
 
     connection = get_connection()
 
     try:
         with connection.cursor() as cursor:
-
-            session_user = _current_schema(cursor)
-
-            if owner != session_user:
-                raise PermissionError(
-                    "Solo se permite recompilar objetos "
-                    "del usuario conectado."
+            try:
+                cursor.execute(
+                    """
+                    BEGIN
+                        MAINT_DEMO.MAINTENANCE_API.RECOMPILE_OBJECT(
+                            :object_name,
+                            :object_type
+                        );
+                    END;
+                    """,
+                    {
+                        "object_name": object_name,
+                        "object_type": object_type,
+                    },
                 )
 
-            cursor.execute(
-                """
-                SELECT COUNT(*)
-                FROM user_objects
-                WHERE object_name = :object_name
-                  AND object_type = :object_type
-                """,
-                {
-                    "object_name": object_name,
-                    "object_type": object_type
-                }
-            )
+            except oracledb.Warning as warning:
+                warning_text = str(warning)
 
-            if cursor.fetchone()[0] == 0:
-                raise ValueError(
-                    "El objeto no existe en el esquema conectado."
-                )
-
-            command = COMPILE_COMMANDS[object_type]
-
-            if object_type == "PACKAGE BODY":
-                sql = (
-                    f"{command} {owner}.{object_name} "
-                    "COMPILE BODY"
-                )
-
-            else:
-                sql = (
-                    f"{command} {owner}.{object_name} "
-                    "COMPILE"
-                )
-
-            cursor.execute(sql)
+                # ORA-24344 significa que ALTER ... COMPILE se ejecutó,
+                # pero el objeto continúa con errores de compilación.
+                # No es un fallo de conexión ni de la aplicación.
+                if (
+                    "ORA-24344" not in warning_text
+                    and "DPY-7000" not in warning_text
+                ):
+                    raise
 
             cursor.execute(
                 """
                 SELECT status
-                FROM user_objects
-                WHERE object_name = :object_name
+                FROM dba_objects
+                WHERE owner = 'MAINT_DEMO'
+                  AND object_name = :object_name
                   AND object_type = :object_type
                 """,
                 {
                     "object_name": object_name,
-                    "object_type": object_type
-                }
+                    "object_type": object_type,
+                },
             )
 
             row = cursor.fetchone()
 
-            status = row[0] if row else "UNKNOWN"
+            status = (
+                row[0]
+                if row
+                else "UNKNOWN"
+            )
 
             return {
                 "success": status == "VALID",
@@ -327,9 +217,11 @@ def recompile_object(
                 "message": (
                     "Objeto recompilado correctamente."
                     if status == "VALID"
-                    else "La recompilación terminó, "
-                         "pero el objeto continúa inválido."
-                )
+                    else
+                    "La recompilación se ejecutó, "
+                    "pero el objeto continúa INVALID. "
+                    "Revise sus errores de compilación."
+                ),
             }
 
     finally:
