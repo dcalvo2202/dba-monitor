@@ -424,6 +424,30 @@
                 observer.disconnect();
             }).observe(element, { childList: true, characterData: true, subtree: true });
         });
+
+        // Hay valores que legítimamente siguen en "—" (por ejemplo "Última
+        // operación" antes de ejecutar una) o que no cargan por un error. Al
+        // terminar la carga, el botón "Actualizar" deja de estar ocupado y se
+        // quitan todas las marcas que sigan puestas; si ese aviso nunca llega,
+        // un plazo máximo evita que la animación quede infinita.
+        const clearSkeletons = () => {
+            document
+                .querySelectorAll(".is-skeleton, .is-skeleton-text")
+                .forEach((element) => element.classList.remove("is-skeleton", "is-skeleton-text"));
+        };
+
+        const refreshButton = document.getElementById("refresh-button");
+
+        if (refreshButton) {
+            new MutationObserver((_, observer) => {
+                if (refreshButton.getAttribute("aria-disabled") === "false") {
+                    clearSkeletons();
+                    observer.disconnect();
+                }
+            }).observe(refreshButton, { attributes: true, attributeFilter: ["aria-disabled"] });
+        }
+
+        window.setTimeout(clearSkeletons, 15000);
     }
 
 
