@@ -149,6 +149,7 @@
                         <a
                             class="nav-item{% if module.key == active_module %} active{% endif %}"
                             href="{{ module.url }}"
+                            title="{{ module.label }}"
                             {% if module.key == active_module %}aria-current="page"{% endif %}
                         >
                             {{ nav_icon(module.key) }}
