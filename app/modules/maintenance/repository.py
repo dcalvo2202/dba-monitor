@@ -226,3 +226,24 @@ def recompile_object(
 
     finally:
         connection.close()
+
+def get_container_name() -> str:
+    """Devuelve el contenedor Oracle de la conexión activa."""
+
+    connection = get_connection()
+
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute(
+                """
+                SELECT SYS_CONTEXT('USERENV', 'CON_NAME')
+                FROM dual
+                """
+            )
+
+            row = cursor.fetchone()
+
+            return row[0].upper()
+
+    finally:
+        connection.close()

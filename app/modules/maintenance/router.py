@@ -91,7 +91,12 @@ def handle_error(exc: Exception):
     """
     Convierte errores conocidos en respuestas HTTP.
     """
-
+    if isinstance(exc, service.MaintenanceUnavailableError):
+        raise HTTPException(
+            status_code=409,
+            detail=str(exc)
+        ) from exc
+    
     if isinstance(exc, PermissionError):
         raise HTTPException(
             status_code=403,

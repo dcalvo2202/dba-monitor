@@ -6,9 +6,25 @@ Gestiona las consultas y operaciones de mantenimiento.
 """
 
 from app.modules.maintenance import repository
+SUPPORTED_CONTAINER = "XEPDB1"
 
 
+class MaintenanceUnavailableError(Exception):
+    """El mantenimiento no está disponible en el contenedor actual."""
+
+def _ensure_supported_container():
+    container = repository.get_container_name()
+
+    if container != SUPPORTED_CONTAINER:
+        raise MaintenanceUnavailableError(
+            "El mantenimiento preventivo está disponible únicamente "
+            "en XEPDB1. Seleccione el perfil XEPDB1 para consultar "
+            "estadísticas o ejecutar operaciones de mantenimiento."
+        )
+    
 def get_invalid_objects():
+    _ensure_supported_container()
+
     """
     Obtiene los objetos inválidos visibles para el usuario Oracle.
     """
@@ -21,6 +37,8 @@ def get_invalid_objects():
 
 
 def get_table_statistics():
+    _ensure_supported_container()
+
     """
     Obtiene las estadísticas de las tablas.
     """
@@ -33,6 +51,8 @@ def get_table_statistics():
 
 
 def update_statistics(owner: str, table_name: str):
+    _ensure_supported_container()
+
     """
     Solicita la actualización de estadísticas de una tabla.
     """
@@ -54,6 +74,7 @@ def recompile_object(
     object_name: str,
     object_type: str
 ):
+    _ensure_supported_container()
     """
     Solicita la recompilación de un objeto Oracle.
     """
