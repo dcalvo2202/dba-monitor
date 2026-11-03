@@ -2180,3 +2180,80 @@ body {
 .progress-bar {
     box-shadow: 0 0 10px var(--glow);
 }
+
+
+/* ==========================================================================
+   Espaciado: más aire entre bloques
+   Una sola escala para toda la interfaz. Antes cada bloque usaba 20 px y,
+   con los paneles de cristal, todo se veía pegado.
+   ========================================================================== */
+
+:root {
+    --space-section: 32px;   /* entre bloques grandes (paneles, gráficos...) */
+    --space-grid: 24px;      /* entre tarjetas o paneles en una misma fila */
+}
+
+.summary-grid,
+.chart-grid,
+.content-grid,
+.tabs,
+.chart-panel,
+.pdb-panel,
+.main-content > .panel {
+    margin-bottom: var(--space-section);
+}
+
+/* Las tarjetas de una fila no llevan margen propio dentro de su grid. */
+.chart-grid .chart-panel,
+.content-grid > .panel {
+    margin-bottom: 0;
+}
+
+.summary-grid {
+    gap: 20px;
+}
+
+.chart-grid,
+.content-grid {
+    gap: var(--space-grid);
+}
+
+/* Separa el encabezado de la página del primer bloque. */
+.page-header {
+    margin-bottom: 36px;
+}
+
+/* Botones y texto dentro del encabezado de un panel: el botón quedaba
+   pegado a la descripción ("Registrar medición"). */
+.panel-header > .refresh-button,
+.panel-header > button {
+    margin-top: 16px;
+}
+
+/* Subtítulo de una tabla dentro de un panel ("Mediciones") y mensajes. */
+.table-title {
+    margin: 0;
+    padding: 28px 22px 14px;
+}
+
+.panel-message {
+    padding: 20px 22px;
+}
+
+/* Filas de tabla con un poco más de altura para respirar. */
+th,
+td {
+    padding-top: 15px;
+    padding-bottom: 15px;
+}
+
+@media (max-width: 700px) {
+    :root {
+        --space-section: 24px;
+        --space-grid: 16px;
+    }
+
+    .page-header {
+        margin-bottom: 28px;
+    }
+}
