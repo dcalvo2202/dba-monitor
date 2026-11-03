@@ -385,12 +385,55 @@
     }
 
 
+    /**
+     * Efecto "skeleton" en la primera carga: las cifras de las tarjetas que
+     * aún muestran "—" y las celdas/mensajes "Cargando..." se dibujan como
+     * barras animadas. Es solo visual (CSS .is-skeleton): el texto se conserva
+     * para los lectores de pantalla. En cuanto un módulo escribe el valor real
+     * se quita la marca; las celdas de tabla desaparecen solas porque el
+     * módulo reemplaza toda la fila.
+     */
+    function setupSkeletons() {
+        const loadingText = /^\s*Cargando/i;
+
+        const cards = document.querySelectorAll(".summary-card strong:not(.status-badge)");
+        const messages = document.querySelectorAll("td, p.viz-empty, .panel-message");
+
+        cards.forEach((element) => {
+            if (element.textContent.trim() !== "—") {
+                return;
+            }
+
+            element.classList.add("is-skeleton");
+
+            new MutationObserver((_, observer) => {
+                element.classList.remove("is-skeleton");
+                observer.disconnect();
+            }).observe(element, { childList: true, characterData: true, subtree: true });
+        });
+
+        messages.forEach((element) => {
+            if (!loadingText.test(element.textContent)) {
+                return;
+            }
+
+            element.classList.add("is-skeleton-text");
+
+            new MutationObserver((_, observer) => {
+                element.classList.remove("is-skeleton-text");
+                observer.disconnect();
+            }).observe(element, { childList: true, characterData: true, subtree: true });
+        });
+    }
+
+
     document.addEventListener("DOMContentLoaded", () => {
         setupThemeToggle();
         setupAutoRefresh();
         setupConnectionAnnouncer();
         setupProfileSelector();
         revealActiveNavItem();
+        setupSkeletons();
 
         // Las fuentes web pueden cambiar el ancho de los textos del menú;
         // se vuelve a centrar cuando terminan de cargar.

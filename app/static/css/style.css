@@ -1883,3 +1883,300 @@ th {
         scroll-behavior: auto !important;
     }
 }
+
+
+/* ==========================================================================
+   Mejoras de interfaz (rama feature/mejoras-ui-ux)
+   ========================================================================== */
+
+/* Los paneles que cuelgan directamente de <main> (p. ej. Rendimiento) no
+   tenían separación y se veían pegados entre sí. */
+.main-content > .panel {
+    margin-bottom: 20px;
+}
+
+/* Tablas de datos: cifras alineadas en columnas y fila resaltada al pasar
+   el mouse, para seguir una fila larga con la vista. */
+td {
+    font-variant-numeric: tabular-nums;
+}
+
+tbody tr {
+    transition: background-color 120ms ease;
+}
+
+tbody tr:hover td {
+    background: var(--bg-hover);
+}
+
+/* Selector de instancia: el texto de los perfiles se cortaba
+   ("...base de datos de la aplicaci"). Se le da un ancho mínimo mayor. */
+.profile-selector .select-input {
+    min-width: 260px;
+    max-width: 340px;
+    text-overflow: ellipsis;
+}
+
+/* Acciones del encabezado alineadas con la base de los controles y, en
+   pantallas medianas, pegadas a la derecha en lugar de dispersas. */
+.header-actions {
+    align-items: flex-end;
+    justify-content: flex-end;
+}
+
+/* Tableta (701-1000 px): la barra lateral pasa a una columna angosta con
+   solo íconos, para devolverle ancho al contenido. Los enlaces conservan su
+   nombre accesible (atributo title/aria-label y texto visualmente oculto). */
+@media (min-width: 701px) and (max-width: 1000px) {
+    :root {
+        --sidebar-width: 68px;
+    }
+
+    .sidebar {
+        padding: 20px 10px;
+    }
+
+    .brand {
+        justify-content: center;
+        padding: 0 0 18px;
+    }
+
+    .brand div,
+    .sidebar-footer {
+        display: none;
+    }
+
+    .nav-item {
+        justify-content: center;
+        padding: 12px 0;
+    }
+
+    .nav-item > span:not(.visually-hidden) {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip: rect(0 0 0 0);
+        white-space: nowrap;
+    }
+
+    .main-content {
+        padding: 30px 24px 48px;
+    }
+}
+
+
+/* Estados de carga tipo skeleton (los marca setupSkeletons en layout.js).
+   El texto sigue en el DOM para lectores de pantalla; solo se vuelve
+   transparente y se dibuja una barra con un brillo que la recorre. */
+.is-skeleton,
+.is-skeleton-text {
+    position: relative;
+    color: transparent !important;
+}
+
+.is-skeleton::after,
+.is-skeleton-text::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    margin: auto 0;
+    background: linear-gradient(
+        90deg,
+        var(--track) 0%,
+        var(--bg-hover) 50%,
+        var(--track) 100%
+    );
+    background-size: 200% 100%;
+    border-radius: 6px;
+    animation: skeleton-shimmer 1.4s ease-in-out infinite;
+}
+
+/* Cifra de tarjeta: barra corta; mensaje de carga: barra más ancha y fina. */
+.is-skeleton {
+    display: inline-block;
+    min-width: 72px;
+    min-height: 1em;
+}
+
+.is-skeleton-text::after {
+    height: 14px;
+    max-width: 320px;
+}
+
+@keyframes skeleton-shimmer {
+    from { background-position: 200% 0; }
+    to   { background-position: -200% 0; }
+}
+
+
+/* ==========================================================================
+   Estilo "cristal" moderno (glassmorphism): superficies translúcidas con
+   desenfoque, brillos del color de marca, cifras con degradado y un
+   indicador de estado que pulsa. Solo usa los tokens de color existentes,
+   por lo que respeta el tema claro y el oscuro.
+   ========================================================================== */
+
+:root {
+    --glow: rgba(42, 120, 214, 0.35);
+    --glass-bg: color-mix(in srgb, var(--bg-surface) 78%, transparent);
+    --glass-border: color-mix(in srgb, var(--border) 75%, rgba(255, 255, 255, 0.5));
+    --aurora-2: rgba(27, 175, 122, 0.10);   /* verde de estado, muy suave */
+}
+
+/* Fondo con dos focos de luz (marca arriba a la derecha, verde abajo a la
+   izquierda) para dar profundidad detrás del cristal. */
+body {
+    background:
+        radial-gradient(900px 480px at 88% -10%, var(--accent-soft), transparent 70%),
+        radial-gradient(760px 420px at 4% 108%, var(--aurora-2), transparent 70%),
+        var(--bg-page);
+    background-attachment: fixed;
+}
+
+/* Superficies de cristal. backdrop-filter solo se aplica si el navegador lo
+   soporta; si no, queda el fondo translúcido sobre el degradado. */
+.summary-card,
+.panel,
+.tabs {
+    background: var(--glass-bg);
+    border-color: var(--glass-border);
+    -webkit-backdrop-filter: blur(14px) saturate(140%);
+    backdrop-filter: blur(14px) saturate(140%);
+}
+
+/* Elevación al pasar el mouse. Se usa la propiedad "translate" (no
+   "transform") porque la animación de entrada ya controla "transform". */
+.summary-card {
+    transition:
+        translate 200ms var(--ease-out),
+        box-shadow 200ms var(--ease-out),
+        border-color 200ms var(--ease-out);
+}
+
+.summary-card:hover {
+    translate: 0 -3px;
+    border-color: color-mix(in srgb, var(--accent) 55%, var(--border));
+    box-shadow:
+        0 1px 2px rgba(15, 23, 42, 0.06),
+        0 14px 32px -8px var(--glow);
+}
+
+/* Cifras grandes con degradado de texto hacia el color de marca. El
+   contraste se mantiene: ambos extremos pasan 4.5:1 sobre su superficie. */
+.summary-card strong:not(.status-badge):not(.is-skeleton) {
+    width: fit-content;
+    background: linear-gradient(120deg, var(--text-primary) 35%, var(--accent-strong));
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+:root[data-theme="dark"] .summary-card strong:not(.status-badge):not(.is-skeleton) {
+    background-image: linear-gradient(120deg, var(--text-primary) 35%, var(--link));
+}
+
+@media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) .summary-card strong:not(.status-badge):not(.is-skeleton) {
+        background-image: linear-gradient(120deg, var(--text-primary) 35%, var(--link));
+    }
+}
+
+/* Ícono de tarjeta con degradado y halo. */
+.summary-icon {
+    background: linear-gradient(135deg, var(--accent-soft), transparent 140%);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 30%, transparent);
+}
+
+/* Título de página con un degradado sutil. */
+.page-header h1 {
+    background: linear-gradient(100deg, var(--text-primary) 55%, var(--accent));
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+/* Marca de cada panel: una pequeña píldora de color antes del título. */
+.panel-header h2 {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.panel-header h2::before {
+    content: "";
+    flex: none;
+    width: 4px;
+    height: 18px;
+    background: linear-gradient(180deg, var(--accent), var(--viz-3));
+    border-radius: 4px;
+}
+
+/* Navegación lateral: el elemento activo lleva una barra luminosa a la
+   izquierda; los demás se desplazan un poco al pasar el mouse. */
+.nav-item {
+    position: relative;
+    border-radius: 8px;
+}
+
+.nav-item.active {
+    background: linear-gradient(90deg, rgba(109, 167, 236, 0.22), rgba(109, 167, 236, 0.04));
+}
+
+.nav-item.active::before {
+    content: "";
+    position: absolute;
+    left: -18px;
+    top: 8px;
+    bottom: 8px;
+    width: 4px;
+    background: var(--accent-on-dark);
+    border-radius: 0 4px 4px 0;
+    box-shadow: 0 0 12px 1px var(--accent-on-dark);
+}
+
+.nav-item:not(.active):not(.disabled):hover {
+    padding-left: 15px;
+}
+
+.brand .brand-mark {
+    box-shadow:
+        0 4px 14px rgba(42, 120, 214, 0.5),
+        inset 0 1px 0 rgba(255, 255, 255, 0.25);
+}
+
+/* Botón principal con degradado y brillo. */
+.refresh-button {
+    background: linear-gradient(135deg, var(--accent) 0%, var(--accent-strong) 100%);
+    border-color: transparent;
+    color: var(--on-accent);
+    box-shadow: 0 4px 14px var(--glow);
+    transition: box-shadow 200ms var(--ease-out), filter 200ms var(--ease-out);
+}
+
+.refresh-button:hover:not(:disabled):not([aria-disabled="true"]) {
+    background: linear-gradient(135deg, var(--accent) 0%, var(--accent-strong) 100%);
+    filter: brightness(1.1);
+    box-shadow: 0 6px 20px var(--glow);
+}
+
+/* Estado "Conectado": el punto pulsa para indicar que es una vista viva. */
+.connection-state.is-ok .status-dot {
+    box-shadow: 0 0 0 0 var(--success);
+    animation: live-pulse 2s ease-out infinite;
+}
+
+@keyframes live-pulse {
+    0%   { box-shadow: 0 0 0 0 color-mix(in srgb, var(--success) 70%, transparent); }
+    100% { box-shadow: 0 0 0 9px transparent; }
+}
+
+/* Etiquetas de estado con un fino halo del color del estado. */
+.status-badge {
+    box-shadow: 0 0 0 1px color-mix(in srgb, currentColor 18%, transparent);
+}
+
+/* Barras de progreso con brillo. */
+.progress-bar {
+    box-shadow: 0 0 10px var(--glow);
+}
